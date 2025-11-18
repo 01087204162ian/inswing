@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>INSWING</title>
+  <script>
+    (function () {
+      const lang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+      if (lang.startsWith('ko')) {
+        window.location.replace('/inswing-landing/ko/index.html');
+      } else {
+        window.location.replace('/inswing-landing/en/index.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>INSWING에 연결 중입니다…</p>
+</body>
+</html>
