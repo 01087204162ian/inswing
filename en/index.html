@@ -1,8 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>INSWING - English</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <title>INSWING - Own Your Swing Story</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #22c55e 0, #020617 50%, #020617 100%);
+      color: #e5e7eb;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+    }
+    .logo {
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .lang {
+      font-size: 0.85rem;
+    }
+    .lang a {
+      color: #9ca3af;
+      text-decoration: none;
+      margin-left: 0.5rem;
+    }
+    .lang a.active {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+    .lang a:hover {
+      color: #ffffff;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      font-size: 0.98rem;
+      color: #cbd5f5;
+      margin-bottom: 1.5rem;
+    }
+    .subtitle em {
+      font-style: normal;
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.8rem;
+    }
+    .btn-primary,
+    .btn-outline {
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-primary {
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+    .btn-outline {
+      background: transparent;
+      border-color: #4b5563;
+      color: #e5e7eb;
+    }
+    .btn-outline:hover {
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .mini {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 768px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+    .feature {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 0.9rem;
+      padding: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .feature-title {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      font-size: 0.9rem;
+    }
+    .feature-body {
+      color: #9ca3af;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 1.2rem;
+      padding: 1.3rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .card-list {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      line-height: 1.6;
+      padding-left: 1.1rem;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      padding: 1rem 0 1.5rem;
+    }
+  </style>
+</head>
 <body>
-  <h1>INSWING English Page</h1>
-  <p>English landing page.</p>
+  <header>
+    <div class="logo">INSWING</div>
+    <div class="lang">
+      Language:
+      <a href="/inswing/ko/index.html">한국어</a>
+      <a href="/inswing/en/index.html" class="active">English</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="title">
+        Own your swing.<br />
+        Remember your fear,<br />
+        and your courage.
+      </div>
+      <div class="subtitle">
+        INS WING is a place where you keep your <em>real swing story</em> –  
+        not only scores, but the feelings, doubts, and small breakthroughs  
+        you experience on the course.
+      </div>
+      <div class="actions">
+        <a href="#" class="btn-primary">
+          Start your first record
+          <span class="mini">coming soon</span>
+        </a>
+        <a href="#" class="btn-outline">
+          Read the INS WING philosophy
+        </a>
+      </div>
+      <div class="mini">
+        We are in an early beta stage.  
+        Built by a golfer who loves the game, for golfers who want to  
+        understand their swing more deeply.
+      </div>
+    </section>
+
+    <section>
+      <div class="card" style="margin-bottom: 1rem;">
+        <div class="card-title">INSWING is for golfers who…</div>
+        <ul class="card-list">
+          <li>feel different on the range and on the course</li>
+          <li>wonder why some days everything clicks and some days nothing does</li>
+          <li>want to leave a <b>personal swing story</b>, not just numbers</li>
+        </ul>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-title">Swing + emotion journal</div>
+          <div class="feature-body">
+            Record your swing video together with your feelings,  
+            course conditions, and key thoughts of the day.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">AI swing insights (upcoming)</div>
+          <div class="feature-body">
+            Head movement, rotation, tempo –  
+            see your swing pattern in an objective way.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Growth timeline</div>
+          <div class="feature-body">
+            Track how your swing and mindset change over time,  
+            course by course, round by round.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Lesson pro connection (future)</div>
+          <div class="feature-body">
+            Share your INS WING history with a lesson pro  
+            and get deeper, more personalized feedback.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © INS WING. Own your swing story. All rights reserved.
+  </footer>
 </body>
 </html>
+
