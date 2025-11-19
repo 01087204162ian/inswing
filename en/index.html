@@ -14,45 +14,82 @@
         sans-serif;
       background: radial-gradient(circle at top, #22c55e 0, #020617 50%, #020617 100%);
       color: #e5e7eb;
+      padding-top: 64px;
+      min-height: 100vh;
     }
+
     header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 1.5rem;
+      padding: 0 1.5rem;
+      background: rgba(2, 6, 23, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      z-index: 50;
     }
+
     .logo {
       font-weight: 800;
       letter-spacing: 0.08em;
     }
+
     .lang {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
       font-size: 0.85rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem 0.25rem 0.7rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
     }
+
+    .lang-label {
+      color: #9ca3af;
+      font-size: 0.78rem;
+    }
+
     .lang a {
       color: #9ca3af;
       text-decoration: none;
-      margin-left: 0.5rem;
+      margin-left: 0.3rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
     }
+
     .lang a.active {
-      color: #e5e7eb;
+      color: #022c22;
       font-weight: 600;
+      background: #22c55e; /* 영어쪽은 초록색 */
     }
+
     .lang a:hover {
       color: #ffffff;
     }
+
     main {
-      max-width: 960px;
+      max-width: 1040px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
+      padding: 2.5rem 1.5rem 3.5rem;
       display: grid;
       grid-template-columns: 1.2fr 1fr;
-      gap: 2rem;
+      gap: 2.5rem;
+      align-items: flex-start;
     }
+
     @media (max-width: 768px) {
       main {
         grid-template-columns: 1fr;
+        padding: 2.5rem 1.25rem 3rem;
       }
     }
+
     .title {
       font-size: 2.1rem;
       font-weight: 800;
@@ -164,7 +201,7 @@
   <header>
     <div class="logo">INSWING</div>
     <div class="lang">
-      Language:
+      <span class="lang-label">Language</span>
       <a href="/inswing/ko/index.html">한국어</a>
       <a href="/inswing/en/index.html" class="active">English</a>
     </div>
