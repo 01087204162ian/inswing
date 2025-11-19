@@ -2,10 +2,247 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>INSWING - 한국어</title>
+  <title>INSWING - 나의 스윙, 나의 이야기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0ea5e9 0, #020617 45%, #020617 100%);
+      color: #e5e7eb;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+    }
+    .logo {
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .lang {
+      font-size: 0.85rem;
+    }
+    .lang a {
+      color: #9ca3af;
+      text-decoration: none;
+      margin-left: 0.5rem;
+    }
+    .lang a.active {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+    .lang a:hover {
+      color: #ffffff;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      font-size: 0.98rem;
+      color: #cbd5f5;
+      margin-bottom: 1.5rem;
+    }
+    .subtitle em {
+      font-style: normal;
+      color: #f97316;
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.8rem;
+    }
+    .btn-primary,
+    .btn-outline {
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn-primary {
+      background: #f97316;
+      color: #111827;
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+    .btn-outline {
+      background: transparent;
+      border-color: #4b5563;
+      color: #e5e7eb;
+    }
+    .btn-outline:hover {
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .mini {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 768px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+    .feature {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 0.9rem;
+      padding: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .feature-title {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      font-size: 0.9rem;
+    }
+    .feature-body {
+      color: #9ca3af;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 1.2rem;
+      padding: 1.3rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .card-list {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      line-height: 1.6;
+      padding-left: 1.1rem;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      padding: 1rem 0 1.5rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>INSWING   hi welcome</h1>
+  <header>
+    <div class="logo">INSWING</div>
+    <div class="lang">
+      언어:
+      <a href="/inswing/ko/index.html" class="active">한국어</a>
+      <a href="/inswing/en/index.html">English</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="title">
+        나의 스윙을<br />
+        기록하고 이해하는<br />
+        **INSWING**
+      </div>
+      <div class="subtitle">
+        필드에서 느끼는 <em>두려움, 설렘, 성장</em>을  
+        단순한 스코어가 아니라 <b>스윙의 이야기</b>로 남기는 서비스입니다.
+      </div>
+      <div class="actions">
+        <a href="#" class="btn-primary">
+          첫 스윙 기록하기
+          <span class="mini">coming soon</span>
+        </a>
+        <a href="#" class="btn-outline">
+          INSWING 철학 보기
+        </a>
+      </div>
+      <div class="mini">
+        지금은 베타 준비 단계입니다.  
+        Ian과 Brown이 함께 만드는, 골퍼를 위한 새로운 기록 방식.
+      </div>
+    </section>
+
+    <section>
+      <div class="card" style="margin-bottom: 1rem;">
+        <div class="card-title">INSWING은 이런 분을 위한 서비스입니다</div>
+        <ul class="card-list">
+          <li>레슨장에서 배운 감각이 필드에서 사라지는 게 아쉬운 골퍼</li>
+          <li>“왜 어떤 날은 잘 되고 어떤 날은 안 될까?”를 알고 싶은 골퍼</li>
+          <li>숫자 대신 <b>본인의 스윙 스토리</b>로 성장 과정을 남기고 싶은 사람</li>
+        </ul>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-title">스윙 영상 + 감정 기록</div>
+          <div class="feature-body">
+            단순한 영상 저장이 아니라,  
+            그날의 컨디션·두려움·깨달음을 함께 기록합니다.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">인공지능 스윙 분석(준비 중)</div>
+          <div class="feature-body">
+            머리 위치, 회전, 템포 등을 자동 분석해  
+            “나만의 스윙 패턴”을 알려드립니다.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">나의 성장 타임라인</div>
+          <div class="feature-body">
+            날짜·코스·동반자와 함께  
+            스윙의 변화를 한 눈에 볼 수 있는 타임라인.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">레슨 프로와의 연결 (향후)</div>
+          <div class="feature-body">
+            나의 INSwing 기록을 기반으로  
+            레슨 프로와 더 깊은 피드백을 나눌 수 있습니다.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © INS WING. 나의 스윙, 나의 이야기. All rights reserved.
+  </footer>
 </body>
 </html>
+
 
