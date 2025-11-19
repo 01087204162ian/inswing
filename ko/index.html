@@ -199,6 +199,68 @@
       color: #6b7280;
       padding: 1rem 0 1.5rem;
     }
+    @media (max-width: 768px) {
+  /* 헤더 조금 낮추고 패딩 줄이기 */
+  header {
+    height: 56px;
+    padding: 0 1rem;
+  }
+
+  body {
+    padding-top: 56px;
+  }
+
+  /* 메인 레이아웃: 1열, 패딩 줄이기 */
+  main {
+    grid-template-columns: 1fr;
+    padding: 1.8rem 1.2rem 2.4rem;
+    gap: 1.8rem;
+  }
+
+  /* 제목/본문 폰트 조금 줄이기 */
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  /* 버튼은 가로 꽉 채우는 느낌으로 */
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* 특징 카드들 간격 줄이기 */
+  .features {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .feature {
+    padding: 0.8rem;
+  }
+
+  /* 카드 섹션 여백 조정 */
+  .card {
+    margin-bottom: 0.8rem;
+    padding: 1rem;
+  }
+
+  footer {
+    font-size: 0.7rem;
+    padding: 0.8rem 0 1.2rem;
+  }
+}
+
   </style>
 </head>
 <body>
