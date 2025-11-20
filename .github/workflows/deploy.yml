@@ -26,10 +26,12 @@ jobs:
             --delete \
             --exclude ".git/*" \
             --exclude ".github/*"
+
       - name: Create CloudFront invalidation
         run: |
           aws cloudfront create-invalidation \
             --distribution-id E1ORH8468OPCF3 \
             --paths "/*"
+
 
 
