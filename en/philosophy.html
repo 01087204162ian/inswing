@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>INSWING Philosophy - Own your swing story</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #22c55e 0, #020617 50%, #020617 100%);
+      color: #e5e7eb;
+      padding-top: 64px;
+      min-height: 100vh;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1.5rem;
+      background: radial-gradient(circle at top left, rgba(74, 222, 128, 0.2), rgba(15, 23, 42, 0.98));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.6);
+      z-index: 50;
+      animation: fadeUp 0.45s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .logo-mark {
+      padding: 0.16rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #22c55e, #0ea5e9);
+      color: #020617;
+      font-weight: 800;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.7);
+    }
+    .logo-main {
+      font-weight: 800;
+      letter-spacing: 0.28em;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    .beta-badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.08rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #cbd5f5;
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .lang {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem 0.25rem 0.7rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+    .lang-label {
+      color: #9ca3af;
+      font-size: 0.78rem;
+    }
+    .lang a {
+      color: #9ca3af;
+      text-decoration: none;
+      margin-left: 0.3rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      transition: background-color 0.18s ease-out, color 0.18s ease-out;
+    }
+    .lang a.active {
+      color: #022c22;
+      font-weight: 600;
+      background: #22c55e;
+    }
+    .lang a:hover { color: #ffffff; }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 3.5rem;
+      animation: fadeUp 0.5s ease-out;
+      animation-fill-mode: both;
+    }
+
+    .breadcrumb {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+    }
+    .breadcrumb a {
+      color: #9ca3af;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    h1 {
+      font-size: 2rem;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #cbd5f5;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    section {
+      margin-bottom: 2rem;
+      padding: 1.5rem 1.6rem;
+      border-radius: 1.25rem;
+      background: radial-gradient(circle at top left, rgba(74, 222, 128, 0.16), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.65);
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+        border-color 0.18s ease-out, background-color 0.18s ease-out;
+    }
+    section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.7);
+      border-color: rgba(248, 250, 252, 0.3);
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      font-size: 0.93rem;
+      line-height: 1.7;
+      margin: 0.4rem 0;
+    }
+    ul {
+      padding-left: 1.2rem;
+      margin: 0.4rem 0 0.6rem;
+    }
+    li {
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .back-actions {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      text-decoration: none;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.9);
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+        background-color 0.18s ease-out, color 0.18s ease-out;
+    }
+    .btn-primary {
+      border-color: transparent;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.5);
+      background: rgba(15, 23, 42, 0.85);
+    }
+    .btn-primary:hover {
+      background: #4ade80;
+      color: #022c22;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        height: 56px;
+        padding: 0 1rem;
+      }
+      body { padding-top: 56px; }
+      main {
+        padding: 1.8rem 1.2rem 2.4rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      section {
+        padding: 1.25rem 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-mark">INS</span>
+      <span class="logo-main">WING</span>
+      <span class="beta-badge">beta</span>
+    </div>
+    <div class="lang">
+      <span class="lang-label">Language</span>
+      <a
+        href="/inswing/ko/philosophy.html"
+        onclick="try{localStorage.setItem('inswing_lang','ko');}catch(e){}"
+      >한국어</a>
+      <a
+        href="/inswing/en/philosophy.html"
+        class="active"
+        onclick="try{localStorage.setItem('inswing_lang','en');}catch(e){}"
+      >English</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="breadcrumb">
+      <a href="/inswing/en/index.html">Home</a> · INS WING Philosophy
+    </div>
+
+    <h1>INS WING Philosophy</h1>
+    <p class="subtitle">
+      INS WING is a place to keep your <strong>real swing story</strong> –
+      not only scores, but the fears, doubts, and small breakthroughs
+      you experience on the course.
+    </p>
+
+    <section>
+      <h2>1. Why record your swing story?</h2>
+      <p>
+        We hit countless shots in a round, but only a few moments stay vivid in our memory.
+        Those moments always come with <strong>emotion</strong>.
+      </p>
+      <ul>
+        <li>One perfect shot can change your entire day,</li>
+        <li>while one bad swing can stay in your head for 18 holes.</li>
+      </ul>
+      <p>
+        INS WING focuses less on “How many did you shoot?” and more on
+        <strong>“How did you feel when you swung?”</strong>
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Recording both fear and courage</h2>
+      <p>
+        Golf is always played between <strong>fear and courage</strong>.
+        A par 3 over water, a tight fairway, the last short putt on 18 –
+        every round is full of decisions.
+      </p>
+      <p>
+        INS WING goes beyond “good shot / bad shot”.
+        It helps you capture the <strong>thoughts, emotions, and body feel</strong>
+        before and after each important swing.
+      </p>
+    </section>
+
+    <section>
+      <h2>3. Growth timeline: swing and mindset together</h2>
+      <p>
+        One lesson or one good round rarely changes everything.
+        Instead, small insights accumulate into your
+        <strong>personal swing philosophy</strong>.
+      </p>
+      <ul>
+        <li>Each round you record becomes a data point,</li>
+        <li>building a <strong>growth timeline</strong> across courses, dates, and partners,</li>
+        <li>so you can look back and see how far you’ve actually come.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Connecting with lesson pros (future)</h2>
+      <p>
+        In the future, INS WING records will be used as a bridge
+        between golfers and lesson pros.
+      </p>
+      <ul>
+        <li>Not just a swing video,</li>
+        <li>but a <strong>swing note</strong> that includes context, emotions, and questions.</li>
+      </ul>
+      <p>
+        Pros can understand the golfer’s <strong>real struggles</strong>,
+        and golfers can see their <strong>growth journey</strong> more clearly.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. One promise we want to keep</h2>
+      <p>
+        INS WING wants golf to be remembered not as a
+        <strong>sport of comparison</strong>, but as a
+        <strong>sport of self-understanding</strong>.
+      </p>
+      <p>
+        Instead of chasing someone else’s score,
+        we encourage you to record your fear and courage,
+        and grow step by step through your own story.
+      </p>
+    </section>
+
+    <div class="back-actions">
+      <a href="/inswing/en/index.html" class="btn btn-primary">Back to INS WING home</a>
+      <a href="/inswing/en/index.html#hero" class="btn">Imagine your first record</a>
+    </div>
+  </main>
+
+  <footer>
+    © INS WING. Own your swing story. All rights reserved.
+  </footer>
+</body>
+</html>
