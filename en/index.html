@@ -17,6 +17,16 @@
       padding-top: 64px;
       min-height: 100vh;
     }
+    @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
     header {
       position: fixed;
@@ -32,6 +42,8 @@
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(148, 163, 184, 0.3);
       z-index: 50;
+      animation: fadeUp 0.45s ease-out;
+      animation-fill-mode: both;
     }
 
     .logo {
@@ -81,6 +93,8 @@
       grid-template-columns: 1.2fr 1fr;
       gap: 2.5rem;
       align-items: flex-start;
+      animation: fadeUp 0.5s ease-out;
+      animation-fill-mode: both;
     }
 
     @media (max-width: 768px) {
@@ -123,6 +137,8 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+      background-color 0.18s ease-out, color 0.18s ease-out;
     }
     .btn-primary {
       background: #22c55e;
@@ -131,6 +147,8 @@
     }
     .btn-primary:hover {
       filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.5);
     }
     .btn-outline {
       background: transparent;
@@ -139,6 +157,8 @@
     }
     .btn-outline:hover {
       background: rgba(15, 23, 42, 0.7);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.5);
     }
     .mini {
       font-size: 0.8rem;
@@ -160,6 +180,8 @@
       border-radius: 0.9rem;
       padding: 0.9rem;
       border: 1px solid rgba(148, 163, 184, 0.2);
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+      border-color 0.18s ease-out, background-color 0.18s ease-out;
     }
     .feature-title {
       font-weight: 600;
@@ -177,6 +199,8 @@
       padding: 1.3rem;
       border: 1px solid rgba(148, 163, 184, 0.3);
       backdrop-filter: blur(10px);
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out,
+      border-color 0.18s ease-out, background-color 0.18s ease-out;
     }
     .card-title {
       font-size: 0.95rem;
@@ -196,67 +220,72 @@
       padding: 1rem 0 1.5rem;
     }
     @media (max-width: 768px) {
-  /* 헤더 조금 낮추고 패딩 줄이기 */
-  header {
-    height: 56px;
-    padding: 0 1rem;
-  }
+      /* 헤더 조금 낮추고 패딩 줄이기 */
+      header {
+        height: 56px;
+        padding: 0 1rem;
+      }
 
-  body {
-    padding-top: 56px;
-  }
+      body {
+        padding-top: 56px;
+      }
 
-  /* 메인 레이아웃: 1열, 패딩 줄이기 */
-  main {
-    grid-template-columns: 1fr;
-    padding: 1.8rem 1.2rem 2.4rem;
-    gap: 1.8rem;
-  }
+      /* 메인 레이아웃: 1열, 패딩 줄이기 */
+      main {
+        grid-template-columns: 1fr;
+        padding: 1.8rem 1.2rem 2.4rem;
+        gap: 1.8rem;
+      }
 
-  /* 제목/본문 폰트 조금 줄이기 */
-  .title {
-    font-size: 1.5rem;
-  }
+      /* 제목/본문 폰트 조금 줄이기 */
+      .title {
+        font-size: 1.5rem;
+      }
 
-  .subtitle {
-    font-size: 0.9rem;
-  }
+      .subtitle {
+        font-size: 0.9rem;
+      }
 
-  /* 버튼은 가로 꽉 채우는 느낌으로 */
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.6rem;
-  }
+      /* 버튼은 가로 꽉 채우는 느낌으로 */
+      .actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+      }
 
-  .btn-primary,
-  .btn-outline {
-    justify-content: center;
-    width: 100%;
-  }
+      .btn-primary,
+      .btn-outline {
+        justify-content: center;
+        width: 100%;
+      }
 
-  /* 특징 카드들 간격 줄이기 */
-  .features {
-    grid-template-columns: 1fr;
-    gap: 0.7rem;
-  }
+      /* 특징 카드들 간격 줄이기 */
+      .features {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+      }
 
-  .feature {
-    padding: 0.8rem;
-  }
+      .feature {
+        padding: 0.8rem;
+      }
 
-  /* 카드 섹션 여백 조정 */
-  .card {
-    margin-bottom: 0.8rem;
-    padding: 1rem;
-  }
+      /* 카드 섹션 여백 조정 */
+      .card {
+        margin-bottom: 0.8rem;
+        padding: 1rem;
+      }
 
-  footer {
-    font-size: 0.7rem;
-    padding: 0.8rem 0 1.2rem;
-  }
-}
-
+      footer {
+        font-size: 0.7rem;
+        padding: 0.8rem 0 1.2rem;
+      }
+    }
+    .feature:hover,
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.6);
+      border-color: rgba(248, 250, 252, 0.28);
+    }
   </style>
 </head>
 <body>
