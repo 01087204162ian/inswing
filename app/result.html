@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>INSWING - 분석 결과</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>스윙 분석 결과</h1>
+
+  <div id="resultCard">
+    <!-- 여기 안에 JS로 내용 채워 넣음 -->
+  </div>
+
+  <h2>오늘 스윙 느낌 선택</h2>
+  <div id="feelings">
+    <button data-code="LIGHT_SMOOTH">가볍고 부드러움</button>
+    <button data-code="FAST">빠른 템포</button>
+    <button data-code="TENSE">힘이 많이 들어감</button>
+    <button data-code="UNSTABLE">불안정</button>
+    <button data-code="SOLID">탄탄한 임팩트</button>
+  </div>
+
+  <textarea id="note" placeholder="오늘 스윙에 대해 한 줄 메모를 남겨보세요." rows="3"></textarea><br>
+  <button id="saveFeelingBtn">느낌 저장하기</button>
+
+  <p id="status"></p>
+
+  <p><a href="/app/history.html">히스토리로 가기</a></p>
+
+  <script src="/app/js/app.js"></script>
+  <script>
+    requireLogin();
+
+    const swingId = getQueryParam('swing_id');
+    const resultCard = document.getElementById('resultCard');
+    const statusEl = document.getElementById('status');
+
+    if (!swingId) {
+      alert('swing_id가 없습니다.');
+    } else {
+      loadSwing();
+    }
+
+    async function loadSwing() {
+      statusEl.textContent = '분석 결과를 불러오는 중...';
+      try {
+        const res = await apiFetch('/api/swings/' + swingId);
+        if (!res.ok) throw new Error('불러오기 실패');
+        const data = await res.json();
+
+        const swing = data.swing;
+        const m = data.metrics || {};
+        const feeling = data.feeling || null;
+
+        // 아주 단순한 카드 예시 (나중에 디자인 입히면 됨)
+        resultCard.innerHTML = `
+          <div style="border:1px solid #ccc;padding:1rem;margin-bottom:1rem;">
+            <p><strong>날짜:</strong> ${new Date(swing.created_at).toLocaleString()}</p>
+            <p><strong>클럽:</strong> ${swing.club_type || '정보 없음'}</p>
+            <p><strong>촬영 방향:</strong> ${swing.shot_side || '-'}</p>
+            <video src="${swing.video_url}" controls width="320"></video>
+
+            <h3>AI 분석 결과 (5개 핵심 지표)</h3>
+            <ul>
+              <li>회전 효율: ${m.rotation_efficiency ?? '-'} </li>
+              <li>균형 안정성: ${m.balance_stability ?? '-'} </li>
+              <li>머리 움직임(%): ${m.head_movement_pct ?? '-'} </li>
+              <li>템포 비율: ${m.tempo_ratio ?? '-'} </li>
+              <li>임팩트 리듬: ${m.impact_rhythm_score ?? '-'} </li>
+            </ul>
+          </div>
+        `;
+
+        // 이미 느낌이 있으면 선택 표시
+        if (feeling && feeling.feeling_code) {
+          highlightFeeling(feeling.feeling_code);
+          document.getElementById('note').value = feeling.note || '';
+        }
+
+        statusEl.textContent = '';
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '결과를 불러오는데 실패했습니다.';
+      }
+    }
+
+    // 느낌 버튼 클릭 시 하이라이트
+    const feelingButtons = document.querySelectorAll('#feelings button');
+    let selectedFeeling = null;
+
+    feelingButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedFeeling = btn.dataset.code;
+        highlightFeeling(selectedFeeling);
+      });
+    });
+
+    function highlightFeeling(code) {
+      feelingButtons.forEach(btn => {
+        if (btn.dataset.code === code) {
+          btn.style.background = '#f97316';
+          btn.style.color = '#111827';
+        } else {
+          btn.style.background = '';
+          btn.style.color = '';
+        }
+      });
+    }
+
+    // 느낌 저장
+    document.getElementById('saveFeelingBtn').addEventListener('click', async () => {
+      if (!selectedFeeling) {
+        alert('느낌을 하나 선택해주세요.');
+        return;
+      }
+      const note = document.getElementById('note').value;
+      statusEl.textContent = '느낌을 저장 중입니다...';
+      try {
+        const res = await apiFetch('/api/swings/' + swingId + '/feeling', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            feeling_code: selectedFeeling,
+            note: note
+          })
+        });
+        if (!res.ok) throw new Error('저장 실패');
+        statusEl.textContent = '저장되었습니다.';
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '저장 중 오류가 발생했습니다.';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>INSWING - 스윙 업로드</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>스윙 영상 업로드</h1>
+
+  <form id="uploadForm">
+    <div>
+      <label>스윙 영상 선택 (mp4):</label><br>
+      <input type="file" name="video" id="videoInput" accept="video/*" required>
+    </div>
+
+    <div>
+      <label>클럽 종류:</label><br>
+      <select name="club_type" id="clubType">
+        <option value="">선택 안 함</option>
+        <option value="driver">Driver</option>
+        <option value="iron7">7 Iron</option>
+        <option value="iron9">9 Iron</option>
+        <!-- 필요하면 추후 추가 -->
+      </select>
+    </div>
+
+    <div>
+      <label>촬영 방향:</label><br>
+      <select name="shot_side" id="shotSide">
+        <option value="front">정면</option>
+        <option value="side">측면</option>
+      </select>
+    </div>
+
+    <button type="submit">업로드 & 분석 시작</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script src="/app/js/app.js"></script>
+  <script>
+    // 페이지 진입 시 로그인 확인
+    requireLogin();
+
+    const form = document.getElementById('uploadForm');
+    const statusEl = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('videoInput');
+      if (!fileInput.files[0]) {
+        alert('영상 파일을 선택해주세요.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('video', fileInput.files[0]);
+      formData.append('club_type', document.getElementById('clubType').value);
+      formData.append('shot_side', document.getElementById('shotSide').value);
+
+      statusEl.textContent = '업로드 중입니다...';
+
+      try {
+        const res = await apiFetch('/api/swings', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          throw new Error('업로드 실패: ' + res.status);
+        }
+
+        const data = await res.json();
+        // 서버가 swing.id를 반환한다고 가정했으니:
+        const swingId = data.swing.id;
+
+        statusEl.textContent = '분석이 완료되었습니다. 결과 화면으로 이동합니다.';
+        // 결과 페이지로 이동
+        window.location.href = '/app/result.html?swing_id=' + swingId;
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = '에러가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      }
+    });
+  </script>
+</body>
+</html>

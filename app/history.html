@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>INSWING - 스윙 히스토리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>나의 스윙 히스토리</h1>
+
+  <div id="list"></div>
+  <p id="status"></p>
+
+  <script src="/app/js/app.js"></script>
+  <script>
+    requireLogin();
+
+    const listEl = document.getElementById('list');
+    const statusEl = document.getElementById('status');
+
+    loadHistory();
+
+    async function loadHistory() {
+      statusEl.textContent = '히스토리를 불러오는 중...';
+      try {
+        const res = await apiFetch('/api/swings?limit=20&offset=0');
+        if (!res.ok) throw new Error('불러오기 실패');
+        const data = await res.json();
+
+        const items = data.items || [];
+        if (items.length === 0) {
+          listEl.innerHTML = '<p>아직 기록된 스윙이 없습니다.</p>';
+          statusEl.textContent = '';
+          return;
+        }
+
+        listEl.innerHTML = items.map(item => {
+          const created = new Date(item.created_at).toLocaleString();
+          const club = item.club_type || '정보 없음';
+          const feeling = item.feeling_code || '미선택';
+
+          return `
+            <div style="border:1px solid #4b5563;padding:0.8rem;margin-bottom:0.6rem;cursor:pointer;"
+                 onclick="goResult(${item.id})">
+              <p><strong>${created}</strong></p>
+              <p>클럽: ${club}</p>
+              <p>느낌: ${feeling}</p>
+              <p>회전 효율: ${item.metrics?.rotation_efficiency ?? '-'}
+                 / 균형: ${item.metrics?.balance_stability ?? '-'}</p>
+            </div>
+          `;
+        }).join('');
+
+        statusEl.textContent = '';
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '히스토리를 불러오는데 실패했습니다.';
+      }
+    }
+
+    function goResult(id) {
+      window.location.href = '/app/result.html?swing_id=' + id;
+    }
+  </script>
+</body>
+</html>
