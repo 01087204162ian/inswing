@@ -27,19 +27,17 @@ cd ~/inswing-api && git pull && npm install && pm2 restart inswing-api
 ```
 
 ## 📂 구조
-```
-inswing-api/          # 백엔드
+inswing-api/ (EC2)       # 백엔드
 ├─ server.js
-├─ package.json
 └─ uploads/
 
-inswing/              # 프론트
-├─ ko/, en/           # 랜딩
-└─ app/               # 서비스
-   ├─ js/app.js
-   ├─ upload.html
-   ├─ history.html
-   └─ result.html
+inswing/ (S3)            # 프론트
+├─ ko/, en/              # 랜딩
+└─ app/
+   ├─ js/app.js          # API 공통 함수
+   ├─ upload.html        # 영상 업로드
+   ├─ history.html       # 스윙 리스트
+   └─ result.html        # 분석 결과 + 느낌
 ```
 
 ## 🔌 API 엔드포인트
