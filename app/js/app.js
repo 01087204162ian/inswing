@@ -10,13 +10,12 @@ function getToken() {
   }
 }
 
-// 2. 로그인 필수 페이지에서 호출
+// 2. 로그인 체크
 function requireLogin() {
   const token = getToken();
   if (!token) {
     alert('로그인이 필요합니다.');
-    // 나중에 별도 로그인 페이지가 생기면 그쪽으로
-    window.location.href = '/ko/index.html';
+    window.location.href = '/app/login.html';  // 변경
   }
   return token;
 }
