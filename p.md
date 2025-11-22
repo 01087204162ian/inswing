@@ -115,8 +115,12 @@ pm2 restart inswing-api
 ```
 
 ## 📋 다음 작업
+🔲 페이지 디자인 (우선순위)
+   - upload.html (업로드 폼 + 프리뷰)
+   - history.html (카드 레이아웃)
+   - result.html (비디오 + 분석 + 느낌)
 🔲 느낌 저장 기능 테스트
 🔲 실제 OAuth (구글/카카오)
 🔲 AI 분석 서버 연동
-🔲 S3 영상 저장 (EC2 uploads → S3)
-🔲 RDS 마이그레이션 (EC2 MySQL → AWS RDS)
+🔲 S3 영상 저장
+🔲 RDS 마이그레이션
