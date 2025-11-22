@@ -172,6 +172,17 @@
       font-weight: 500;
     }
     
+    .feeling-badge {
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(249, 115, 22, 0.2);
+      color: #f97316;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+    
     .card-metrics {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -260,6 +271,14 @@
           return;
         }
 
+        const feelingNames = {
+          'LIGHT_SMOOTH': '✨ 가볍고 부드러움',
+          'FAST': '⚡ 빠르고 강함',
+          'TENSE': '😰 긴장되고 뻣뻣함',
+          'UNSTABLE': '🌀 불안정함',
+          'SOLID': '💪 탄탄하고 안정적'
+        };
+
         listEl.innerHTML = `<div class="card-list">${items.map(item => {
           const created = new Date(item.created_at).toLocaleString('ko-KR', {
             year: 'numeric',
@@ -285,6 +304,14 @@
           
           const club = clubNames[item.club_type] || item.club_type;
           const side = sideNames[item.shot_side] || item.shot_side;
+          
+          const feelingText = item.feeling?.feeling_code 
+            ? feelingNames[item.feeling.feeling_code] || '느낌 선택됨'
+            : '느낌 미선택';
+
+          const feelingBadge = item.feeling?.feeling_code 
+            ? `<div class="feeling-badge">${feelingText}</div>`
+            : '';
 
           return `
             <div class="swing-card" onclick="goResult(${item.id})">
@@ -303,6 +330,8 @@
                   <span class="info-value">완료 ✓</span>
                 </div>
               </div>
+              
+              ${feelingBadge}
               
               <div class="card-metrics">
                 <div class="metric-item">
