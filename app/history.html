@@ -1,15 +1,229 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>INSWING - 스윙 히스토리</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0ea5e9 0, #020617 45%, #020617 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .logo-mark {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #020617;
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 1rem;
+    }
+    
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .desc {
+      color: #cbd5e1;
+      font-size: 0.9rem;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: #f97316;
+      color: #111827;
+    }
+    
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.6);
+    }
+    
+    .status {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1.2rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+    
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .empty-text {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-list {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .swing-card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .swing-card:hover {
+      border-color: #0ea5e9;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .card-date {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+    
+    .card-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.2);
+      color: #0ea5e9;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    .card-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .info-label {
+      color: #94a3b8;
+    }
+    
+    .info-value {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+    
+    .card-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    
+    .metric-item {
+      font-size: 0.85rem;
+    }
+    
+    .metric-label {
+      color: #94a3b8;
+      margin-bottom: 0.2rem;
+    }
+    
+    .metric-value {
+      color: #22c55e;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      h1 { font-size: 1.5rem; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+      .card-info { grid-template-columns: 1fr; }
+      .card-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
-  <h1>나의 스윙 히스토리</h1>
+  <div class="container">
+    <div class="header">
+      <span class="logo-mark">INSWING</span>
+      <h1>나의 스윙 히스토리</h1>
+      <p class="desc">AI 분석 결과를 확인하세요</p>
+    </div>
 
-  <div id="list"></div>
-  <p id="status"></p>
+    <div class="actions">
+      <a href="/app/upload.html" class="btn btn-primary">
+        새 스윙 업로드
+      </a>
+      <button onclick="loadHistory()" class="btn btn-secondary">
+        새로고침
+      </button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="list"></div>
+  </div>
 
   <script src="/app/js/app.js"></script>
   <script>
@@ -22,39 +236,108 @@
 
     async function loadHistory() {
       statusEl.textContent = '히스토리를 불러오는 중...';
+      listEl.innerHTML = '';
+      
       try {
         const res = await apiFetch('/api/swings?limit=20&offset=0');
         if (!res.ok) throw new Error('불러오기 실패');
+        
         const data = await res.json();
-
         const items = data.swings || [];
+
+        statusEl.textContent = '';
+
         if (items.length === 0) {
-          listEl.innerHTML = '<p>아직 기록된 스윙이 없습니다.</p>';
-          statusEl.textContent = '';
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">⛳</div>
+              <div class="empty-text">아직 기록된 스윙이 없습니다</div>
+              <a href="/app/upload.html" class="btn btn-primary">
+                첫 스윙 업로드하기
+              </a>
+            </div>
+          `;
           return;
         }
 
-        listEl.innerHTML = items.map(item => {
-          const created = new Date(item.created_at).toLocaleString();
-          const club = item.club_type || '정보 없음';
-          const feeling = item.feeling_code || '미선택';
+        listEl.innerHTML = `<div class="card-list">${items.map(item => {
+          const created = new Date(item.created_at).toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          const clubNames = {
+            'driver': '드라이버',
+            'wood': '우드',
+            'iron': '아이언',
+            'wedge': '웨지',
+            'putter': '퍼터'
+          };
+          
+          const sideNames = {
+            'front': '정면',
+            'back': '후면',
+            'side': '측면'
+          };
+          
+          const club = clubNames[item.club_type] || item.club_type;
+          const side = sideNames[item.shot_side] || item.shot_side;
 
           return `
-            <div style="border:1px solid #4b5563;padding:0.8rem;margin-bottom:0.6rem;cursor:pointer;"
-                 onclick="goResult(${item.id})">
-              <p><strong>${created}</strong></p>
-              <p>클럽: ${club}</p>
-              <p>느낌: ${feeling}</p>
-              <p>회전 효율: ${item.metrics?.rotation_efficiency ?? '-'}
-                 / 균형: ${item.metrics?.balance_stability ?? '-'}</p>
+            <div class="swing-card" onclick="goResult(${item.id})">
+              <div class="card-header">
+                <div class="card-date">${created}</div>
+                <div class="card-badge">${club}</div>
+              </div>
+              
+              <div class="card-info">
+                <div class="info-item">
+                  <span class="info-label">촬영:</span>
+                  <span class="info-value">${side}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">분석:</span>
+                  <span class="info-value">완료 ✓</span>
+                </div>
+              </div>
+              
+              <div class="card-metrics">
+                <div class="metric-item">
+                  <div class="metric-label">백스윙 각도</div>
+                  <div class="metric-value">${item.metrics?.backswing_angle || '-'}°</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">임팩트 속도</div>
+                  <div class="metric-value">${item.metrics?.impact_speed || '-'} km/h</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">팔로우스루</div>
+                  <div class="metric-value">${item.metrics?.follow_through_angle || '-'}°</div>
+                </div>
+                <div class="metric-item">
+                  <div class="metric-label">밸런스</div>
+                  <div class="metric-value">${item.metrics?.balance_score || '-'}</div>
+                </div>
+              </div>
             </div>
           `;
-        }).join('');
+        }).join('')}</div>`;
 
-        statusEl.textContent = '';
       } catch (e) {
         console.error(e);
         statusEl.textContent = '히스토리를 불러오는데 실패했습니다.';
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <div class="empty-text">데이터를 불러올 수 없습니다</div>
+            <button onclick="loadHistory()" class="btn btn-secondary">
+              다시 시도
+            </button>
+          </div>
+        `;
       }
     }
 
