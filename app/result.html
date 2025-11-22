@@ -1,137 +1,484 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>INSWING - 분석 결과</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>INSWING - 스윙 분석 결과</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0ea5e9 0, #020617 45%, #020617 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .logo-mark {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #020617;
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 1rem;
+    }
+    
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .meta {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 1.2rem;
+      padding: 2rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.7);
+      margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #e5e7eb;
+    }
+    
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 0.8rem;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 1rem;
+    }
+    
+    video {
+      width: 100%;
+      display: block;
+    }
+    
+    .swing-info {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+    }
+    
+    .info-badge {
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.2);
+      color: #0ea5e9;
+      font-weight: 500;
+    }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .metric-card {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 1.2rem;
+      border-radius: 0.8rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    
+    .metric-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+    
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #22c55e;
+    }
+    
+    .metric-unit {
+      font-size: 1rem;
+      color: #cbd5e1;
+      margin-left: 0.3rem;
+    }
+    
+    .feelings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    
+    .feeling-btn {
+      padding: 0.8rem;
+      border-radius: 0.8rem;
+      border: 2px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.6);
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    
+    .feeling-btn:hover {
+      border-color: #0ea5e9;
+      background: rgba(14, 165, 233, 0.1);
+    }
+    
+    .feeling-btn.selected {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.2);
+      color: #f97316;
+    }
+    
+    .feeling-icon {
+      font-size: 1.5rem;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.8rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 0.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #0ea5e9;
+    }
+    
+    textarea::placeholder {
+      color: #64748b;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 0.8rem;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 0.9rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+    }
+    
+    .btn-primary {
+      background: #f97316;
+      color: #111827;
+    }
+    
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+    
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.6);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .status {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      min-height: 1.5rem;
+    }
+    
+    .status.error { color: #fecaca; }
+    .status.success { color: #bbf7d0; }
+    
+    @media (max-width: 768px) {
+      h1 { font-size: 1.5rem; }
+      .card { padding: 1.5rem; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .feelings-grid { grid-template-columns: repeat(2, 1fr); }
+      .btn-group { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-  <h1>스윙 분석 결과</h1>
+  <div class="container">
+    <div class="header">
+      <span class="logo-mark">INSWING</span>
+      <h1>스윙 분석 결과</h1>
+      <p class="meta" id="metaInfo">분석 일시: <span id="dateInfo"></span></p>
+    </div>
 
-  <div id="resultCard">
-    <!-- 여기 안에 JS로 내용 채워 넣음 -->
+    <!-- 비디오 -->
+    <div class="card">
+      <div class="video-wrapper">
+        <video id="swingVideo" controls controlsList="nodownload"></video>
+      </div>
+      <div class="swing-info">
+        <span class="info-badge" id="clubBadge">클럽: -</span>
+        <span class="info-badge" id="sideBadge">촬영: -</span>
+      </div>
+    </div>
+
+    <!-- AI 분석 결과 -->
+    <div class="card">
+      <div class="section-title">AI 분석 결과 (5개 핵심 지표)</div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">회전 효율</div>
+          <div class="metric-value">
+            <span id="metricRotation">-</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">균형 안정성</div>
+          <div class="metric-value">
+            <span id="metricBalance">-</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">백스윙 각도</div>
+          <div class="metric-value">
+            <span id="metricBackswing">-</span>
+            <span class="metric-unit">°</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">임팩트 속도</div>
+          <div class="metric-value">
+            <span id="metricSpeed">-</span>
+            <span class="metric-unit">km/h</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">팔로우스루 각도</div>
+          <div class="metric-value">
+            <span id="metricFollow">-</span>
+            <span class="metric-unit">°</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오늘 스윙 느낌 선택 -->
+    <div class="card">
+      <div class="section-title">오늘 스윙 느낌 선택</div>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">
+        스윙 중 느꼈던 감각을 선택해주세요 (선택)
+      </p>
+      
+      <div class="feelings-grid">
+        <button class="feeling-btn" data-feeling="LIGHT_SMOOTH">
+          <span class="feeling-icon">✨</span>
+          가볍고 부드러움
+        </button>
+        <button class="feeling-btn" data-feeling="FAST">
+          <span class="feeling-icon">⚡</span>
+          빠르고 강함
+        </button>
+        <button class="feeling-btn" data-feeling="TENSE">
+          <span class="feeling-icon">😰</span>
+          긴장되고 뻣뻣함
+        </button>
+        <button class="feeling-btn" data-feeling="UNSTABLE">
+          <span class="feeling-icon">🌀</span>
+          불안정함
+        </button>
+        <button class="feeling-btn" data-feeling="SOLID">
+          <span class="feeling-icon">💪</span>
+          탄탄하고 안정적
+        </button>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <label style="display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: #cbd5e1;">
+          추가 메모 (선택)
+        </label>
+        <textarea 
+          id="noteInput" 
+          placeholder="오늘 스윙에 대해 기억하고 싶은 점을 적어주세요..."
+        ></textarea>
+      </div>
+
+      <div class="btn-group" style="margin-top: 1.5rem;">
+        <button class="btn btn-primary" id="saveBtn">
+          느낌 저장하기
+        </button>
+        <a href="/app/history.html" class="btn btn-secondary" style="text-align: center; line-height: 1.2;">
+          히스토리로 가기
+        </a>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
   </div>
-
-  <h2>오늘 스윙 느낌 선택</h2>
-  <div id="feelings">
-    <button data-code="LIGHT_SMOOTH">가볍고 부드러움</button>
-    <button data-code="FAST">빠른 템포</button>
-    <button data-code="TENSE">힘이 많이 들어감</button>
-    <button data-code="UNSTABLE">불안정</button>
-    <button data-code="SOLID">탄탄한 임팩트</button>
-  </div>
-
-  <textarea id="note" placeholder="오늘 스윙에 대해 한 줄 메모를 남겨보세요." rows="3"></textarea><br>
-  <button id="saveFeelingBtn">느낌 저장하기</button>
-
-  <p id="status"></p>
-
-  <p><a href="/app/history.html">히스토리로 가기</a></p>
 
   <script src="/app/js/app.js"></script>
   <script>
     requireLogin();
 
     const swingId = getQueryParam('swing_id');
-    const resultCard = document.getElementById('resultCard');
-    const statusEl = document.getElementById('status');
-
     if (!swingId) {
-      alert('swing_id가 없습니다.');
-    } else {
-      loadSwing();
+      alert('잘못된 접근입니다.');
+      window.location.href = '/app/history.html';
     }
 
-    async function loadSwing() {
-      statusEl.textContent = '분석 결과를 불러오는 중...';
-      try {
-        const res = await apiFetch('/api/swings/' + swingId);
-        if (!res.ok) throw new Error('불러오기 실패');
-        const data = await res.json();
-
-        const swing = data.swing;
-        const m = data.metrics || {};
-        const feeling = data.feeling || null;
-
-        // 아주 단순한 카드 예시 (나중에 디자인 입히면 됨)
-        resultCard.innerHTML = `
-          <div style="border:1px solid #ccc;padding:1rem;margin-bottom:1rem;">
-            <p><strong>날짜:</strong> ${new Date(swing.created_at).toLocaleString()}</p>
-            <p><strong>클럽:</strong> ${swing.club_type || '정보 없음'}</p>
-            <p><strong>촬영 방향:</strong> ${swing.shot_side || '-'}</p>
-            <video src="${swing.video_url}" controls width="320"></video>
-
-            <h3>AI 분석 결과 (5개 핵심 지표)</h3>
-            <ul>
-              <li>회전 효율: ${m.rotation_efficiency ?? '-'} </li>
-              <li>균형 안정성: ${m.balance_stability ?? '-'} </li>
-              <li>머리 움직임(%): ${m.head_movement_pct ?? '-'} </li>
-              <li>템포 비율: ${m.tempo_ratio ?? '-'} </li>
-              <li>임팩트 리듬: ${m.impact_rhythm_score ?? '-'} </li>
-            </ul>
-          </div>
-        `;
-
-        // 이미 느낌이 있으면 선택 표시
-        if (feeling && feeling.feeling_code) {
-          highlightFeeling(feeling.feeling_code);
-          document.getElementById('note').value = feeling.note || '';
-        }
-
-        statusEl.textContent = '';
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = '결과를 불러오는데 실패했습니다.';
-      }
-    }
-
-    // 느낌 버튼 클릭 시 하이라이트
-    const feelingButtons = document.querySelectorAll('#feelings button');
     let selectedFeeling = null;
 
-    feelingButtons.forEach(btn => {
+    // 느낌 버튼 클릭
+    document.querySelectorAll('.feeling-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        selectedFeeling = btn.dataset.code;
-        highlightFeeling(selectedFeeling);
+        document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedFeeling = btn.dataset.feeling;
       });
     });
 
-    function highlightFeeling(code) {
-      feelingButtons.forEach(btn => {
-        if (btn.dataset.code === code) {
-          btn.style.background = '#f97316';
-          btn.style.color = '#111827';
-        } else {
-          btn.style.background = '';
-          btn.style.color = '';
+    // 데이터 로드
+    loadSwingData();
+
+    async function loadSwingData() {
+      try {
+        const res = await apiFetch('/api/swings/' + swingId);
+        if (!res.ok) throw new Error('데이터 조회 실패');
+        
+        const data = await res.json();
+        const swing = data.swing;
+        const metrics = data.metrics;
+        const feeling = data.feeling;
+
+        // 날짜
+        const date = new Date(swing.created_at).toLocaleString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        document.getElementById('dateInfo').textContent = date;
+
+        // 비디오
+        document.getElementById('swingVideo').src = swing.video_url;
+
+        // 정보
+        const clubNames = {
+          'driver': '드라이버',
+          'wood': '우드',
+          'iron': '아이언',
+          'wedge': '웨지',
+          'putter': '퍼터'
+        };
+        const sideNames = {
+          'front': '정면',
+          'back': '후면',
+          'side': '측면'
+        };
+        document.getElementById('clubBadge').textContent = '클럽: ' + (clubNames[swing.club_type] || swing.club_type);
+        document.getElementById('sideBadge').textContent = '촬영: ' + (sideNames[swing.shot_side] || swing.shot_side);
+
+        // 메트릭스
+        document.getElementById('metricRotation').textContent = '-'; // TODO: 실제 데이터
+        document.getElementById('metricBalance').textContent = metrics.balance_score || '-';
+        document.getElementById('metricBackswing').textContent = metrics.backswing_angle || '-';
+        document.getElementById('metricSpeed').textContent = metrics.impact_speed || '-';
+        document.getElementById('metricFollow').textContent = metrics.follow_through_angle || '-';
+
+        // 기존 느낌 표시
+        if (feeling && feeling.feeling_code) {
+          selectedFeeling = feeling.feeling_code;
+          const btn = document.querySelector(`[data-feeling="${feeling.feeling_code}"]`);
+          if (btn) btn.classList.add('selected');
+          
+          if (feeling.note) {
+            document.getElementById('noteInput').value = feeling.note;
+          }
         }
-      });
+
+      } catch (err) {
+        console.error(err);
+        alert('데이터를 불러올 수 없습니다.');
+        window.location.href = '/app/history.html';
+      }
     }
 
-    // 느낌 저장
-    document.getElementById('saveFeelingBtn').addEventListener('click', async () => {
+    // 저장
+    document.getElementById('saveBtn').addEventListener('click', async () => {
       if (!selectedFeeling) {
-        alert('느낌을 하나 선택해주세요.');
+        document.getElementById('status').textContent = '느낌을 선택해주세요.';
+        document.getElementById('status').className = 'status error';
         return;
       }
-      const note = document.getElementById('note').value;
-      statusEl.textContent = '느낌을 저장 중입니다...';
+
+      const note = document.getElementById('noteInput').value.trim();
+      const saveBtn = document.getElementById('saveBtn');
+      const statusEl = document.getElementById('status');
+
+      saveBtn.disabled = true;
+      statusEl.textContent = '저장 중...';
+      statusEl.className = 'status';
+
       try {
         const res = await apiFetch('/api/swings/' + swingId + '/feeling', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             feeling_code: selectedFeeling,
             note: note
           })
         });
+
         if (!res.ok) throw new Error('저장 실패');
-        statusEl.textContent = '저장되었습니다.';
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = '저장 중 오류가 발생했습니다.';
+
+        statusEl.textContent = '저장 완료! ✓';
+        statusEl.className = 'status success';
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 2000);
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = '저장 실패: ' + err.message;
+        statusEl.className = 'status error';
+      } finally {
+        saveBtn.disabled = false;
       }
     });
   </script>
