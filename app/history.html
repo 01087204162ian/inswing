@@ -27,7 +27,7 @@
         if (!res.ok) throw new Error('불러오기 실패');
         const data = await res.json();
 
-        const items = data.items || [];
+        const items = data.swings || [];
         if (items.length === 0) {
           listEl.innerHTML = '<p>아직 기록된 스윙이 없습니다.</p>';
           statusEl.textContent = '';
