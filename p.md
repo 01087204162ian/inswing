@@ -114,13 +114,16 @@ npm install
 pm2 restart inswing-api
 ```
 
-## 📋 다음 작업
-🔲 페이지 디자인 (우선순위)
-   - upload.html (업로드 폼 + 프리뷰)
-   - history.html (카드 레이아웃)
-   - result.html (비디오 + 분석 + 느낌)
-🔲 느낌 저장 기능 테스트
+## 🎯 현재 상태
+✅ AWS 인프라 (EC2 + Nginx + SSL + PM2)
+✅ API 서버 (MySQL)
+✅ 프론트엔드 (S3 + CloudFront)
+✅ JWT 로그인 시스템
+✅ 업로드/히스토리/결과 페이지 (디자인 완료)
+✅ 비디오 재생 (Node.js 프록시)
+✅ 느낌 선택 및 저장 기능
+✅ 히스토리 느낌 표시
 🔲 실제 OAuth (구글/카카오)
-🔲 AI 분석 서버 연동
+🔲 AI 분석 서버
 🔲 S3 영상 저장
 🔲 RDS 마이그레이션
