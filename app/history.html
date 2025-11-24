@@ -316,7 +316,8 @@
                     throw new Error('히스토리를 불러올 수 없습니다.');
                 }
 
-                const swings = await response.json();
+                const data = await response.json();  // ✅ data 객체 받기
+                const swings = data.swings;  // ✅ .swings 추출
 
                 loadingDiv.style.display = 'none';
 
@@ -327,11 +328,10 @@
 
                 swingsGrid.style.display = 'grid';
                 renderSwings(swings);
-
             } catch (error) {
                 console.error('히스토리 로드 오류:', error);
                 loadingDiv.style.display = 'none';
-                noDataDiv.style.display = 'block';
+                alert('히스토리를 불러오는 중 오류가 발생했습니다.');
             }
         }
 
