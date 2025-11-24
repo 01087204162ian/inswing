@@ -1,331 +1,417 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>INSWING - 스윙 업로드</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #0ea5e9 0, #020617 45%, #020617 100%);
-      color: #e5e7eb;
-      min-height: 100vh;
-      padding: 1.5rem;
-    }
-    
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    
-    .logo-mark {
-      display: inline-block;
-      padding: 0.3rem 0.8rem;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color: #020617;
-      font-weight: 800;
-      font-size: 1.2rem;
-      letter-spacing: 0.14em;
-      margin-bottom: 1rem;
-    }
-    
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .desc {
-      color: #cbd5e1;
-      font-size: 0.9rem;
-    }
-    
-    .card {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 1.2rem;
-      padding: 2rem;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.7);
-      margin-bottom: 1.5rem;
-    }
-    
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    
-    label {
-      display: block;
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-    
-    .file-input-wrapper {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      width: 100%;
-    }
-    
-    .file-input-label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1rem;
-      background: rgba(15, 23, 42, 0.9);
-      border: 2px dashed rgba(148, 163, 184, 0.7);
-      border-radius: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .file-input-label:hover {
-      border-color: #0ea5e9;
-      background: rgba(14, 165, 233, 0.1);
-    }
-    
-    .file-input-label.has-file {
-      border-color: #22c55e;
-      background: rgba(34, 197, 94, 0.1);
-    }
-    
-    input[type="file"] {
-      position: absolute;
-      left: -9999px;
-    }
-    
-    .file-icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .file-text {
-      text-align: center;
-    }
-    
-    .file-name {
-      color: #22c55e;
-      font-weight: 500;
-      margin-top: 0.5rem;
-    }
-    
-    select {
-      width: 100%;
-      padding: 0.8rem;
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 0.5rem;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      color: #e5e7eb;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-    
-    select:focus {
-      outline: none;
-      border-color: #0ea5e9;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 0.9rem;
-      border-radius: 999px;
-      border: none;
-      background: #f97316;
-      color: #111827;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
-    }
-    
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 26px rgba(249, 115, 22, 0.4);
-    }
-    
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .status {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.9rem;
-      min-height: 1.5rem;
-    }
-    
-    .status.error { color: #fecaca; }
-    .status.success { color: #bbf7d0; }
-    
-    .nav-link {
-      display: block;
-      text-align: center;
-      color: #0ea5e9;
-      text-decoration: none;
-      font-size: 0.9rem;
-      margin-top: 1rem;
-    }
-    
-    .nav-link:hover {
-      text-decoration: underline;
-    }
-    
-    @media (max-width: 768px) {
-      h1 { font-size: 1.5rem; }
-      .card { padding: 1.5rem; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <span class="logo-mark">INSWING</span>
-      <h1>스윙 영상 업로드</h1>
-      <p class="desc">골프 스윙 영상을 분석해드립니다</p>
-    </div>
-
-    <div class="card">
-      <form id="uploadForm">
-        <div class="form-group">
-          <label>영상 파일</label>
-          <div class="file-input-wrapper">
-            <label for="video" class="file-input-label" id="fileLabel">
-              <div class="file-text">
-                <div class="file-icon">📹</div>
-                <div>클릭하여 영상 선택</div>
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.3rem;">
-                  MP4, MOV, AVI (최대 100MB)
-                </div>
-                <div id="fileName" class="file-name"></div>
-              </div>
-            </label>
-            <input 
-              type="file" 
-              id="video" 
-              name="video" 
-              accept="video/*" 
-              required
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="clubType">클럽 종류</label>
-          <select id="clubType" name="club_type" required>
-            <option value="">선택하세요</option>
-            <option value="driver">드라이버</option>
-            <option value="wood">우드</option>
-            <option value="iron">아이언</option>
-            <option value="wedge">웨지</option>
-            <option value="putter">퍼터</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="shotSide">촬영 각도</label>
-          <select id="shotSide" name="shot_side" required>
-            <option value="">선택하세요</option>
-            <option value="front">정면</option>
-            <option value="back">후면</option>
-            <option value="side">측면</option>
-          </select>
-        </div>
-
-        <button type="submit" class="btn" id="uploadBtn">
-          분석 시작
-        </button>
-      </form>
-
-      <div id="status" class="status"></div>
-      
-      <a href="/app/history.html" class="nav-link">
-        히스토리 보기 →
-      </a>
-    </div>
-  </div>
-
-  <script src="/app/js/app.js"></script>
-  <script>
-    requireLogin();
-
-    const form = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('video');
-    const fileLabel = document.getElementById('fileLabel');
-    const fileName = document.getElementById('fileName');
-    const statusEl = document.getElementById('status');
-    const uploadBtn = document.getElementById('uploadBtn');
-
-    // 파일 선택 시 표시
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        fileName.textContent = file.name;
-        fileLabel.classList.add('has-file');
-      } else {
-        fileName.textContent = '';
-        fileLabel.classList.remove('has-file');
-      }
-    });
-
-    // 업로드
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const file = fileInput.files[0];
-      if (!file) {
-        statusEl.textContent = '영상을 선택해주세요.';
-        statusEl.className = 'status error';
-        return;
-      }
-
-      const clubType = document.getElementById('clubType').value;
-      const shotSide = document.getElementById('shotSide').value;
-
-      uploadBtn.disabled = true;
-      statusEl.textContent = '업로드 중... (최대 1분 소요)';
-      statusEl.className = 'status';
-
-      try {
-        const formData = new FormData();
-        formData.append('video', file);
-        formData.append('club_type', clubType);
-        formData.append('shot_side', shotSide);
-
-        const res = await apiFetch('/api/swings', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || '업로드 실패');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스윙 업로드 - INSWING</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        const data = await res.json();
-        
-        statusEl.textContent = '분석 완료! 결과 페이지로 이동합니다...';
-        statusEl.className = 'status success';
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
 
-        setTimeout(() => {
-          window.location.href = '/app/result.html?swing_id=' + data.swing.id;
-        }, 1000);
+        /* 네비게이션 바 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.6);
+            z-index: 100;
+        }
 
-      } catch (err) {
-        console.error(err);
-        statusEl.textContent = '업로드 실패: ' + err.message;
-        statusEl.className = 'status error';
-        uploadBtn.disabled = false;
-      }
-    });
-  </script>
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .nav-logo-mark {
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.14em;
+        }
+
+        .nav-logo-text {
+            color: #e5e7eb;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #e5e7eb;
+            background: rgba(148, 163, 184, 0.1);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .nav-link.active {
+            color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .nav-link.logout {
+            color: #f97316;
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        /* 메인 컨텐츠 */
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cbd5e1;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        select:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        select option {
+            background: #1e293b;
+            color: #e5e7eb;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        input[type="file"] {
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            opacity: 0.9;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .video-preview {
+            margin-top: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .video-preview video {
+            width: 100%;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .top-nav {
+                height: 56px;
+                padding: 0 1rem;
+            }
+            
+            body {
+                padding-top: 72px;
+            }
+            
+            .nav-logo-text {
+                display: none;
+            }
+            
+            .nav-menu {
+                gap: 0.3rem;
+            }
+            
+            .nav-link {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.8rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <nav class="top-nav">
+        <a href="/ko/index.html" class="nav-logo">
+            <span class="nav-logo-mark">INS</span>
+            <span class="nav-logo-text">WING</span>
+        </a>
+        <div class="nav-menu">
+            <a href="/app/upload.html" class="nav-link">업로드</a>
+            <a href="/app/history.html" class="nav-link">히스토리</a>
+            <a href="#" onclick="logout(); return false;" class="nav-link logout">로그아웃</a>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="container">
+        <div class="card">
+            <h1>스윙 영상 업로드</h1>
+            <p class="subtitle">골프 스윙 영상을 업로드하고 AI 분석을 받아보세요</p>
+
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="clubType">클럽 종류</label>
+                    <select id="clubType" required>
+                        <option value="">선택하세요</option>
+                        <option value="driver">드라이버</option>
+                        <option value="wood">우드</option>
+                        <option value="iron">아이언</option>
+                        <option value="wedge">웨지</option>
+                        <option value="putter">퍼터</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shotSide">촬영 방향</label>
+                    <select id="shotSide" required>
+                        <option value="">선택하세요</option>
+                        <option value="front">정면</option>
+                        <option value="side">측면</option>
+                        <option value="back">후면</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="videoFile">영상 파일</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="videoFile" accept="video/*" required>
+                    </div>
+                </div>
+
+                <div id="videoPreview" class="video-preview" style="display:none;">
+                    <video id="previewVideo" controls></video>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">업로드 및 분석 시작</button>
+            </form>
+
+            <div id="loadingDiv" class="loading" style="display:none;">
+                영상을 분석하고 있습니다
+            </div>
+        </div>
+    </div>
+
+    <script src="/app/js/app.js"></script>
+    <script>
+        // 로그인 체크
+        requireLogin();
+
+        const form = document.getElementById('uploadForm');
+        const videoFileInput = document.getElementById('videoFile');
+        const videoPreview = document.getElementById('videoPreview');
+        const previewVideo = document.getElementById('previewVideo');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // 비디오 파일 선택 시 미리보기
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                previewVideo.src = url;
+                videoPreview.style.display = 'block';
+            } else {
+                videoPreview.style.display = 'none';
+            }
+        });
+
+        // 폼 제출
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const clubType = document.getElementById('clubType').value;
+            const shotSide = document.getElementById('shotSide').value;
+            const videoFile = videoFileInput.files[0];
+
+            if (!videoFile) {
+                alert('영상 파일을 선택해주세요.');
+                return;
+            }
+
+            // UI 업데이트
+            submitBtn.disabled = true;
+            form.style.display = 'none';
+            loadingDiv.style.display = 'block';
+
+            try {
+                // FormData 생성
+                const formData = new FormData();
+                formData.append('video', videoFile);
+                formData.append('club_type', clubType);
+                formData.append('shot_side', shotSide);
+
+                // API 호출
+                const response = await apiFetch('/api/swings/upload', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {} // FormData는 Content-Type 자동 설정
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('업로드 완료! 분석 결과 페이지로 이동합니다.');
+                    window.location.href = `/app/result.html?id=${result.swing_id}`;
+                } else {
+                    const error = await response.json();
+                    alert('업로드 실패: ' + (error.error || '알 수 없는 오류'));
+                    form.style.display = 'block';
+                    loadingDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('업로드 오류:', error);
+                alert('업로드 중 오류가 발생했습니다: ' + error.message);
+                form.style.display = 'block';
+                loadingDiv.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
