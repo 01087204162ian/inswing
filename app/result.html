@@ -466,11 +466,12 @@
                 });
 
                 // 메트릭 설정
+                // 메트릭 설정
                 if (metrics && metrics.backswing_angle != null) {
-                    document.getElementById('backswingAngle').textContent = metrics.backswing_angle.toFixed(1);
-                    document.getElementById('impactSpeed').textContent = metrics.impact_speed.toFixed(2);
-                    document.getElementById('followThroughAngle').textContent = metrics.follow_through_angle.toFixed(1);
-                    document.getElementById('balanceScore').textContent = metrics.balance_score.toFixed(2);
+                    document.getElementById('backswingAngle').textContent = parseFloat(metrics.backswing_angle).toFixed(1);
+                    document.getElementById('impactSpeed').textContent = parseFloat(metrics.impact_speed).toFixed(2);
+                    document.getElementById('followThroughAngle').textContent = parseFloat(metrics.follow_through_angle).toFixed(1);
+                    document.getElementById('balanceScore').textContent = parseFloat(metrics.balance_score).toFixed(2);
                 }
 
                 // 느낌 버튼 설정
