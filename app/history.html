@@ -310,7 +310,7 @@
         // 히스토리 로드
         async function loadHistory() {
             try {
-                const response = await apiFetch('/api/swings/history');
+                const response = await apiFetch('/api/swings');
                 
                 if (!response.ok) {
                     throw new Error('히스토리를 불러올 수 없습니다.');
