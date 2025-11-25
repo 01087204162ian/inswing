@@ -30,7 +30,10 @@ async function apiFetch(path, options = {}) {
     headers['Authorization'] = 'Bearer ' + token;
   }
   
-  headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  // FormData가 아닐 때만 Content-Type 설정
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
   
   const config = {
     ...options,

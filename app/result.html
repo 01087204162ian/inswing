@@ -444,16 +444,19 @@
                 }
 
                 const data = await response.json();
+                
+                // 🔥 백엔드 응답 구조: { ok, swing, metrics, feeling }
+                const { swing, metrics, feeling } = data;
 
                 // UI 업데이트
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'grid';
 
                 // 비디오 설정
-                swingVideo.src = data.video_url;
+                swingVideo.src = swing.video_url;
 
                 // 날짜 설정
-                const date = new Date(data.created_at);
+                const date = new Date(swing.created_at);
                 swingDateEl.textContent = date.toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: 'long',
@@ -463,20 +466,21 @@
                 });
 
                 // 메트릭 설정
-                if (data.backswing_angle) {
-                    document.getElementById('backswingAngle').textContent = data.backswing_angle.toFixed(1);
-                    document.getElementById('impactSpeed').textContent = data.impact_speed.toFixed(2);
-                    document.getElementById('followThroughAngle').textContent = data.follow_through_angle.toFixed(1);
-                    document.getElementById('balanceScore').textContent = data.balance_score.toFixed(2);
+                // 메트릭 설정
+                if (metrics && metrics.backswing_angle != null) {
+                    document.getElementById('backswingAngle').textContent = parseFloat(metrics.backswing_angle).toFixed(1);
+                    document.getElementById('impactSpeed').textContent = parseFloat(metrics.impact_speed).toFixed(2);
+                    document.getElementById('followThroughAngle').textContent = parseFloat(metrics.follow_through_angle).toFixed(1);
+                    document.getElementById('balanceScore').textContent = parseFloat(metrics.balance_score).toFixed(2);
                 }
 
                 // 느낌 버튼 설정
-                setupFeelingButtons(data.feeling);
+                setupFeelingButtons(feeling?.feeling_code || null);
 
             } catch (error) {
                 console.error('결과 로드 오류:', error);
                 alert('분석 결과를 불러오는 중 오류가 발생했습니다.');
-                window.location.href = '/app/history.html';
+                //window.location.href = '/app/history.html';
             }
         }
 
