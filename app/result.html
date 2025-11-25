@@ -490,6 +490,7 @@
             
             buttons.forEach(btn => {
                 const feeling = btn.dataset.feeling;
+                if (!feeling) return; // 방어 코드
                 
                 if (feeling === currentFeeling) {
                     btn.classList.add('selected');
