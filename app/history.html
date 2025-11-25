@@ -370,11 +370,11 @@
                             </div>
                             <div class="swing-date">${dateStr}</div>
                         </div>
-                        ${swing.backswing_angle ? `
+                         ${swing.metrics && swing.metrics.backswing_angle ? `
                             <div class="metrics-preview">
                                 <div class="metric-item">
                                     <div class="metric-label">백스윙</div>
-                                    <div class="metric-value">${swing.backswing_angle.toFixed(1)}°</div>
+                                    <div class="metric-value">${parseFloat(swing.metrics.backswing_angle).toFixed(1)}°</div>
                                 </div>
                                 <div class="metric-item">
                                     <div class="metric-label">임팩트 속도</div>
