@@ -504,7 +504,10 @@
                     try {
                         const response = await apiFetch(`/api/swings/${swingId}/feeling`, {
                             method: 'POST',
-                            body: JSON.stringify({ feeling })
+                            body: JSON.stringify({ 
+                                feeling_code: feeling,
+                                note: ''
+                            })
                         });
                         
                         if (response.ok) {
