@@ -378,15 +378,15 @@
                                 </div>
                                 <div class="metric-item">
                                     <div class="metric-label">임팩트 속도</div>
-                                    <div class="metric-value">${swing.impact_speed.toFixed(1)}</div>
+                                    <div class="metric-value">${parseFloat(swing.metrics.impact_speed).toFixed(1)}</div>
                                 </div>
                                 <div class="metric-item">
                                     <div class="metric-label">팔로우스루</div>
-                                    <div class="metric-value">${swing.follow_through_angle.toFixed(1)}°</div>
+                                    <div class="metric-value">${parseFloat(swing.metrics.follow_through_angle).toFixed(1)}°</div>
                                 </div>
                                 <div class="metric-item">
                                     <div class="metric-label">밸런스</div>
-                                    <div class="metric-value">${swing.balance_score.toFixed(2)}</div>
+                                    <div class="metric-value">${parseFloat(swing.metrics.balance_score).toFixed(2)}</div>
                                 </div>
                             </div>
                         ` : '<p style="color: #94a3b8; text-align: center; margin-top: 1rem;">분석 대기 중...</p>'}
