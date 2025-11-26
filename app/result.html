@@ -155,9 +155,15 @@
             margin-bottom: 2rem;
         }
 
+        .metrics-grid-extended {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
         .metric-card {
             background: rgba(15, 23, 42, 0.6);
-            padding: 1.5rem;
+            padding: 1.2rem 1rem;
             border-radius: 12px;
             border: 1px solid rgba(148, 163, 184, 0.2);
             text-align: center;
@@ -165,12 +171,12 @@
 
         .metric-label {
             color: #94a3b8;
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
         }
 
         .metric-value {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 700;
             background: linear-gradient(135deg, #0ea5e9, #22c55e);
             -webkit-background-clip: text;
@@ -179,9 +185,16 @@
         }
 
         .metric-unit {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #94a3b8;
             margin-left: 0.25rem;
+        }
+
+        .section-title {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #cbd5e1;
         }
 
         .feeling-section {
@@ -355,7 +368,7 @@
         </div>
 
         <div id="contentDiv" class="content-grid" style="display:none;">
-            <!-- 비디오 섹션 -->
+            <!-- 비디오 + 느낌 -->
             <div class="card">
                 <div class="video-container">
                     <video id="swingVideo" controls></video>
@@ -374,7 +387,7 @@
 
             <!-- 메트릭 섹션 -->
             <div class="card">
-                <h2 style="margin-bottom: 1.5rem; color: #cbd5e1;">AI 분석 결과</h2>
+                <h2 class="section-title">AI 핵심 분석</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -408,6 +421,70 @@
                     </div>
                 </div>
 
+                <h2 class="section-title">추가 분석 지표</h2>
+                <div class="metrics-grid-extended">
+                    <div class="metric-card">
+                        <div class="metric-label">템포 비율 (백:다운)</div>
+                        <div class="metric-value">
+                            <span id="tempoRatio">-</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">백스윙 시간</div>
+                        <div class="metric-value">
+                            <span id="backswingTime">-</span>
+                            <span class="metric-unit">s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">다운스윙 시간</div>
+                        <div class="metric-value">
+                            <span id="downswingTime">-</span>
+                            <span class="metric-unit">s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">머리 흔들림</div>
+                        <div class="metric-value">
+                            <span id="headMovement">-</span>
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">어깨 회전 범위</div>
+                        <div class="metric-value">
+                            <span id="shoulderRotation">-</span>
+                            <span class="metric-unit">°</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">골반 회전 범위</div>
+                        <div class="metric-value">
+                            <span id="hipRotation">-</span>
+                            <span class="metric-unit">°</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">회전 효율</div>
+                        <div class="metric-value">
+                            <span id="rotationEfficiency">-</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">종합 스윙 점수</div>
+                        <div class="metric-value">
+                            <span id="overallScore">-</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="actions">
                     <a href="/app/upload.html" class="btn btn-primary">새 스윙 업로드</a>
                     <a href="/app/history.html" class="btn btn-secondary">히스토리 보기</a>
@@ -434,6 +511,22 @@
             window.location.href = '/app/history.html';
         }
 
+        // 값 출력 헬퍼
+        function setMetricValue(id, value, digits = 2) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (value === null || value === undefined) {
+                el.textContent = '-';
+                return;
+            }
+            const num = Number(value);
+            if (Number.isNaN(num)) {
+                el.textContent = '-';
+            } else {
+                el.textContent = num.toFixed(digits);
+            }
+        }
+
         // 분석 결과 로드
         async function loadResult() {
             try {
@@ -445,7 +538,7 @@
 
                 const data = await response.json();
                 
-                // 🔥 백엔드 응답 구조: { ok, swing, metrics, feeling }
+                // 구조: { ok, swing, metrics, feeling }
                 const { swing, metrics, feeling } = data;
 
                 // UI 업데이트
@@ -465,13 +558,22 @@
                     minute: '2-digit'
                 });
 
-                // 메트릭 설정
-                // 메트릭 설정
-                if (metrics && metrics.backswing_angle != null) {
-                    document.getElementById('backswingAngle').textContent = parseFloat(metrics.backswing_angle).toFixed(1);
-                    document.getElementById('impactSpeed').textContent = parseFloat(metrics.impact_speed).toFixed(2);
-                    document.getElementById('followThroughAngle').textContent = parseFloat(metrics.follow_through_angle).toFixed(1);
-                    document.getElementById('balanceScore').textContent = parseFloat(metrics.balance_score).toFixed(2);
+                // 핵심 메트릭
+                if (metrics) {
+                    setMetricValue('backswingAngle', metrics.backswing_angle, 1);
+                    setMetricValue('impactSpeed', metrics.impact_speed, 2);
+                    setMetricValue('followThroughAngle', metrics.follow_through_angle, 1);
+                    setMetricValue('balanceScore', metrics.balance_score, 2);
+
+                    // 확장 메트릭
+                    setMetricValue('tempoRatio', metrics.tempo_ratio, 2);
+                    setMetricValue('backswingTime', metrics.backswing_time_sec, 2);
+                    setMetricValue('downswingTime', metrics.downswing_time_sec, 2);
+                    setMetricValue('headMovement', metrics.head_movement_pct, 2);
+                    setMetricValue('shoulderRotation', metrics.shoulder_rotation_range, 1);
+                    setMetricValue('hipRotation', metrics.hip_rotation_range, 1);
+                    setMetricValue('rotationEfficiency', metrics.rotation_efficiency, 0);
+                    setMetricValue('overallScore', metrics.overall_score, 0);
                 }
 
                 // 느낌 버튼 설정
@@ -480,7 +582,6 @@
             } catch (error) {
                 console.error('결과 로드 오류:', error);
                 alert('분석 결과를 불러오는 중 오류가 발생했습니다.');
-                //window.location.href = '/app/history.html';
             }
         }
 
