@@ -385,7 +385,7 @@
         async function loadHistory() {
             try {
                 // ⚠️ 중요: /api/swings 가 아니라 /swings (CORS 회피, result.html과 동일)
-                const response = await apiFetch('/api/swings');
+                const response = await apiFetch('/swings');//
 
                 if (!response.ok) {
                     throw new Error('히스토리를 불러올 수 없습니다.');
