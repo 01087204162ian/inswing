@@ -453,6 +453,15 @@
             <div class="card">
                 <h2 style="margin-bottom: 1rem; color: #cbd5e1;">AI 분석 지표</h2>
 
+                <div id="aiCommentBox"
+                    style="margin-bottom:1.2rem;padding:0.9rem 1rem;
+                            border-radius:12px;
+                            background:rgba(15,23,42,0.8);
+                            border:1px solid rgba(96,165,250,0.5);
+                            font-size:0.9rem; line-height:1.5;">
+                    분석 코멘트를 불러오는 중입니다...
+                </div>
+
                 <!-- 주요 지표 4개 -->
                 <div class="metrics-grid-main">
                     <div class="metric-card">
@@ -649,7 +658,13 @@
                 }
 
                 const data = await response.json();
-                const { swing, metrics, feeling } = data;
+                const { swing, metrics, feeling, comment } = data;
+                const aiCommentBox = document.getElementById('aiCommentBox');
+                if (aiCommentBox) {
+                aiCommentBox.textContent =
+                    comment ||
+                    '이번 스윙에 대한 코멘트가 충분하지 않습니다. 다음 스윙부터 데이터를 더 쌓아볼게요.';
+                }
 
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'grid';
