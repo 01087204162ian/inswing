@@ -407,7 +407,7 @@
                 formData.append('shot_side', shotSide);
 
                 // API 호출 - 🔥 여기를 수정 🔥
-                const response = await apiFetch('/api/swings', {  // ← /upload 제거!
+                const response = await apiFetch('/swings', {  // ← /upload 제거!
                     method: 'POST',
                     body: formData,
                     headers: {} // FormData는 Content-Type 자동 설정
