@@ -659,6 +659,7 @@
 
                 const data = await response.json();
                 const { swing, metrics, feeling, comment } = data;
+                console.log('서버에서 받은 comment:', comment); // 🔍 확인용
                 const aiCommentBox = document.getElementById('aiCommentBox');
                 if (aiCommentBox) {
                 aiCommentBox.textContent =
