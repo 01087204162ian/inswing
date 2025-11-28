@@ -230,6 +230,29 @@
             margin-left: 0.15rem;
         }
 
+        /* AI 코멘트 프리뷰 */
+        .comment-row {
+            margin-top: 0.2rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .comment-label {
+            display: inline-block;
+            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 0.25rem;
+        }
+
+        .comment-text {
+            color: #e5e7eb;
+            display: block;
+        }
+
         .feeling-row {
             margin-top: 0.2rem;
             font-size: 0.8rem;
@@ -381,11 +404,18 @@
             return typeof fixed === 'number' ? num.toFixed(fixed) : String(num);
         }
 
+        // 텍스트 길이 제한 (AI 코멘트 프리뷰용)
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.slice(0, maxLength).trim() + '…';
+        }
+
         // 히스토리 로드
         async function loadHistory() {
             try {
-                // ⚠️ 중요: /api/swings 가 아니라 /swings (CORS 회피, result.html과 동일)
-                const response = await apiFetch('/swings');//
+                // result.html과 동일하게 /swings 사용
+                const response = await apiFetch('/swings');
 
                 if (!response.ok) {
                     throw new Error('히스토리를 불러올 수 없습니다.');
@@ -433,6 +463,12 @@
                 const feelingCode = swing.feeling?.feeling_code;
                 const feelingLabel = feelingCode ? (feelingTexts[feelingCode] || feelingCode) : null;
 
+                // 🔥 AI 코멘트 한 줄 요약
+                const rawComment = swing.comment || '';
+                const shortComment = rawComment
+                    ? truncateText(rawComment, 80)
+                    : '이번 스윙에 대한 코멘트가 충분하지 않습니다. 다음 스윙부터 데이터를 더 쌓아볼게요.';
+
                 return `
                     <div class="swing-card" onclick="viewResult(${swing.id})">
                         <div class="swing-top-row">
@@ -470,6 +506,12 @@
                                     ${head}<span class="metric-unit">%</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- 🔥 AI 코멘트 프리뷰 -->
+                        <div class="comment-row">
+                            <span class="comment-label">AI 코멘트</span>
+                            <span class="comment-text">${shortComment}</span>
                         </div>
 
                         ${
