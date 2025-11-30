@@ -598,142 +598,140 @@
   <div id="toast" class="toast"></div>
 
   <script src="/app/js/app.js"></script>
-  <script>
-    // 로그인 체크
-    requireLogin();
+<script>
+  // 로그인 체크
+  requireLogin();
 
-    const focusTagContainer = document.getElementById('focusTagContainer');
-    const recentStatList = document.getElementById('recentStatList');
-    const patternList = document.getElementById('patternList');
-    const bestSwingSection = document.getElementById('bestSwingSection');
-    const noSwingState = document.getElementById('noSwingState');
-    const bestSwingTags = document.getElementById('bestSwingTags');
-    const btnStartRoutine = document.getElementById('btnStartRoutine');
-    const btnEndRoutine = document.getElementById('btnEndRoutine');
-    const btnGoBestSwing = document.getElementById('btnGoBestSwing');
-    const bestSwingThumb = document.getElementById('bestSwingThumb');
-    const toastEl = document.getElementById('toast');
+  const focusTagContainer = document.getElementById('focusTagContainer');
+  const recentStatList = document.getElementById('recentStatList');
+  const patternList = document.getElementById('patternList');
+  const bestSwingSection = document.getElementById('bestSwingSection');
+  const noSwingState = document.getElementById('noSwingState');
+  const bestSwingTags = document.getElementById('bestSwingTags');
+  const btnStartRoutine = document.getElementById('btnStartRoutine');
+  const btnEndRoutine = document.getElementById('btnEndRoutine');
+  const btnGoBestSwing = document.getElementById('btnGoBestSwing');
+  const bestSwingThumb = document.getElementById('bestSwingThumb');
+  const toastEl = document.getElementById('toast');
 
-    // --- v0: 완전 더미 데이터 (향후 /routine/today API로 대체) ---
-    const dummyRoutine = {
-      dateText: '오늘 · 1일차 루틴',
-      goalText: '방향성과 피니시 안정감',
-      focusTags: ['머리 고정', '피니시 끝까지', '템포 3:1'],
-      recentStats: [
-        { label: '스윙 개수', valueText: '7개', ratio: 0.4 },
-        { label: '평균 점수', valueText: '58점', ratio: 0.58 },
-        { label: '머리 흔들림(평균)', valueText: '32%', ratio: 0.32 },
-        { label: '밸런스 점수(평균)', valueText: '0.94', ratio: 0.94 }
-      ],
-      patterns: [
-        '강점 · 밸런스 점수가 꾸준히 0.9 이상으로 유지되고 있습니다.',
-        '약점 · 머리 흔들림 태그가 최근 2주 동안 60% 이상의 스윙에서 발견되었습니다.',
-        '루틴 포인트 · 드라이버 정면 샷에서 피니시가 일찍 풀리는 패턴이 반복되고 있습니다.'
-      ],
-      bestSwing: {
-        exists: true,
-        id: 34,  // 추후 실제 ID로 교체
-        title: '드라이버 / 정면 · 점수 72점',
-        dateText: '2025. 11. 29. 오후 2:41',
-        tags: ['대표 샷', '밸런스 좋음', '템포 안정']
-      }
-    };
+  function showToast(message) {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.classList.add('show');
+    setTimeout(() => {
+      toastEl.classList.remove('show');
+    }, 2000);
+  }
 
-    function showToast(message) {
-      if (!toastEl) return;
-      toastEl.textContent = message;
-      toastEl.classList.add('show');
-      setTimeout(() => {
-        toastEl.classList.remove('show');
-      }, 2000);
+  function renderRoutine(data) {
+    const routineDateText = document.getElementById('routineDateText');
+    const routineGoalBadge = document.getElementById('routineGoalBadge');
+    const routineMainText = document.getElementById('routineMainText');
+
+    routineDateText.textContent = data.date_text || '오늘 루틴';
+    routineGoalBadge.textContent = data.goal_text
+      ? `오늘 목표 · ${data.goal_text}`
+      : '오늘 목표 · 가볍게 리듬 만들기';
+
+    // 메인 설명은 서버에서 아직 안 넘기니 기존 문구 유지하거나,
+    // data.patterns[0] 을 첫 줄로 써도 된다.
+    if (data.patterns && data.patterns.length) {
+      routineMainText.textContent = data.patterns[0];
     }
 
-    function renderRoutine(dummy) {
-      // 날짜/목표 텍스트
-      const routineDateText = document.getElementById('routineDateText');
-      const routineGoalBadge = document.getElementById('routineGoalBadge');
-      const routineMainText = document.getElementById('routineMainText');
+    // 포커스 태그
+    focusTagContainer.innerHTML = '';
+    (data.focus_tags || []).forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'focus-tag';
+      span.textContent = tag;
+      focusTagContainer.appendChild(span);
+    });
 
-      routineDateText.textContent = dummy.dateText;
-      routineGoalBadge.textContent = `오늘 목표 · ${dummy.goalText}`;
-      // routineMainText는 일단 기본 문구 유지(원하면 문자열 교체 가능)
+    // 최근 통계
+    recentStatList.innerHTML = '';
+    (data.recent_stats || []).forEach(stat => {
+      const item = document.createElement('div');
+      item.className = 'stat-item';
 
-      // 포커스 태그
-      focusTagContainer.innerHTML = '';
-      dummy.focusTags.forEach(tag => {
+      const labelRow = document.createElement('div');
+      labelRow.className = 'stat-label-row';
+      labelRow.innerHTML = `<span>${stat.label}</span><span>${stat.value_text}</span>`;
+
+      const bar = document.createElement('div');
+      bar.className = 'stat-bar';
+      const fill = document.createElement('div');
+      fill.className = 'stat-bar-fill';
+      const r = Math.min(Math.max(stat.ratio || 0, 0), 1);
+      fill.style.width = `${r * 100}%`;
+      bar.appendChild(fill);
+
+      item.appendChild(labelRow);
+      item.appendChild(bar);
+      recentStatList.appendChild(item);
+    });
+
+    // 패턴 리스트
+    patternList.innerHTML = '';
+    (data.patterns || []).forEach(text => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      patternList.appendChild(li);
+    });
+
+    // 대표 스윙
+    if (!data.best_swing || !data.best_swing.exists) {
+      bestSwingSection.style.display = 'none';
+      noSwingState.style.display = 'block';
+    } else {
+      bestSwingSection.style.display = 'flex';
+      noSwingState.style.display = 'none';
+
+      const bs = data.best_swing;
+      document.getElementById('bestSwingTitle').textContent = bs.title;
+      document.getElementById('bestSwingDate').textContent = bs.date_text;
+      bestSwingTags.innerHTML = '';
+      (bs.tags || []).forEach(t => {
         const span = document.createElement('span');
-        span.className = 'focus-tag';
-        span.textContent = tag;
-        focusTagContainer.appendChild(span);
+        span.className = 'best-swing-tag';
+        span.textContent = t;
+        bestSwingTags.appendChild(span);
       });
 
-      // 최근 7일 통계
-      recentStatList.innerHTML = '';
-      dummy.recentStats.forEach(stat => {
-        const item = document.createElement('div');
-        item.className = 'stat-item';
-
-        const labelRow = document.createElement('div');
-        labelRow.className = 'stat-label-row';
-        labelRow.innerHTML = `<span>${stat.label}</span><span>${stat.valueText}</span>`;
-
-        const bar = document.createElement('div');
-        bar.className = 'stat-bar';
-        const fill = document.createElement('div');
-        fill.className = 'stat-bar-fill';
-        fill.style.width = `${Math.min(Math.max(stat.ratio, 0), 1) * 100}%`;
-        bar.appendChild(fill);
-
-        item.appendChild(labelRow);
-        item.appendChild(bar);
-        recentStatList.appendChild(item);
-      });
-
-      // 패턴 리스트
-      patternList.innerHTML = '';
-      dummy.patterns.forEach(text => {
-        const li = document.createElement('li');
-        li.textContent = text;
-        patternList.appendChild(li);
-      });
-
-      // 대표 스윙
-      if (dummy.bestSwing && dummy.bestSwing.exists) {
-        bestSwingSection.style.display = 'flex';
-        noSwingState.style.display = 'none';
-
-        document.getElementById('bestSwingTitle').textContent = dummy.bestSwing.title;
-        document.getElementById('bestSwingDate').textContent = dummy.bestSwing.dateText;
-        bestSwingTags.innerHTML = '';
-        dummy.bestSwing.tags.forEach(t => {
-          const span = document.createElement('span');
-          span.className = 'best-swing-tag';
-          span.textContent = t;
-          bestSwingTags.appendChild(span);
-        });
-
-        const goResult = () => {
-          window.location.href = `/app/result.html?id=${dummy.bestSwing.id}`;
-        };
-        btnGoBestSwing.onclick = goResult;
-        bestSwingThumb.onclick = goResult;
-      } else {
-        bestSwingSection.style.display = 'none';
-        noSwingState.style.display = 'block';
-      }
+      const goResult = () => {
+        window.location.href = `/app/result.html?id=${bs.id}`;
+      };
+      btnGoBestSwing.onclick = goResult;
+      bestSwingThumb.onclick = goResult;
     }
+  }
 
-    // 버튼 액션 (현재는 UI 피드백만)
-    btnStartRoutine.addEventListener('click', () => {
-      showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
-    });
+  // 버튼 액션 (현재는 UI 피드백만)
+  btnStartRoutine.addEventListener('click', () => {
+    showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
+  });
 
-    btnEndRoutine.addEventListener('click', () => {
-      showToast('루틴 마무리 기능은 추후 추가될 예정입니다.');
-    });
+  btnEndRoutine.addEventListener('click', () => {
+    showToast('루틴 마무리 기능은 추후 추가될 예정입니다.');
+  });
 
-    // 초기 렌더링
-    renderRoutine(dummyRoutine);
-  </script>
+  // 🔥 실제 API 호출
+  async function loadRoutine() {
+    try {
+      const res = await apiFetch('/routine/today');
+      if (!res.ok) {
+        throw new Error('ROUTINE_TODAY_FAILED');
+      }
+      const data = await res.json();
+      renderRoutine(data);
+    } catch (err) {
+      console.error('루틴 로드 오류:', err);
+      showToast('루틴 정보를 불러오지 못했습니다.');
+    }
+  }
+
+  loadRoutine();
+</script>
+
 </body>
 </html>
