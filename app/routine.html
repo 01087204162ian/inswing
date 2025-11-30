@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 성장 루틴 - INSWING</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding-top: 80px;
+    }
+
+    /* 네비게이션 바 (다른 페이지와 동일 스타일) */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1.5rem;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.6);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #020617;
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 0.14em;
+    }
+
+    .nav-logo-text {
+      color: #e5e7eb;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: #e5e7eb;
+      background: rgba(148, 163, 184, 0.1);
+      border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    .nav-link.active {
+      color: #0ea5e9;
+      background: rgba(14, 165, 233, 0.1);
+      border-color: rgba(14, 165, 233, 0.3);
+    }
+
+    .nav-link.logout {
+      color: #f97316;
+    }
+
+    .nav-link.logout:hover {
+      background: rgba(249, 115, 22, 0.1);
+      border-color: rgba(249, 115, 22, 0.3);
+    }
+
+    /* 메인 레이아웃 */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .page-title {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 16px;
+      padding: 1.7rem 1.8rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: #e5e7eb;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 1.2rem;
+    }
+
+    /* 상단 요약 카드 */
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      margin-top: 0.8rem;
+    }
+
+    .summary-pill {
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .summary-label {
+      color: #9ca3af;
+    }
+
+    .summary-value {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    /* 오늘의 루틴 카드 */
+    .routine-main {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .routine-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.6);
+      font-size: 0.8rem;
+      color: #bbf7d0;
+    }
+
+    .routine-main-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #e5e7eb;
+    }
+
+    .routine-focus-label {
+      font-size: 0.82rem;
+      color: #9ca3af;
+      margin-top: 0.2rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .focus-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .focus-tag {
+      padding: 0.28rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      border: 1px solid rgba(96, 165, 250, 0.7);
+      background: rgba(15, 23, 42, 0.8);
+      color: #bfdbfe;
+    }
+
+    .routine-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .routine-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .routine-actions {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .btn {
+      padding: 0.65rem 1.3rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #020617;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-outline {
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: transparent;
+      color: #e5e7eb;
+    }
+
+    .btn-outline:hover {
+      background: rgba(148, 163, 184, 0.15);
+    }
+
+    .btn-disabled {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* 최근 7일 카드 (간단 그래프 느낌 바) */
+    .stat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 0.4rem;
+    }
+
+    .stat-item {
+      font-size: 0.82rem;
+      color: #9ca3af;
+    }
+
+    .stat-label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-bar {
+      position: relative;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #0ea5e9, #22c55e);
+      width: 40%;
+    }
+
+    /* 대표 스윙 카드 */
+    .best-swing {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .best-swing-thumb {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .best-swing-thumb-inner {
+      padding-top: 56%;
+      position: relative;
+    }
+
+    .best-swing-thumb-inner span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .best-swing-meta {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .best-swing-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+    }
+
+    .best-swing-tag {
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(251, 191, 36, 0.8);
+      color: #facc15;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    /* 하단 섹션 : 패턴 요약 */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .pattern-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .pattern-list li::before {
+      content: "• ";
+      color: #22c55e;
+    }
+
+    .empty-state {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      text-align: center;
+      padding: 1.5rem 0.5rem;
+    }
+
+    /* 토스트 */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      border: 1px solid rgba(52, 211, 153, 0.7);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+      z-index: 200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -6px);
+    }
+
+    @media (max-width: 992px) {
+      .grid,
+      .bottom-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .top-nav {
+        height: 56px;
+        padding: 0 1rem;
+      }
+
+      body {
+        padding-top: 72px;
+      }
+
+      .nav-logo-text {
+        display: none;
+      }
+
+      .nav-link {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.8rem;
+      }
+
+      .card {
+        padding: 1.4rem 1.4rem;
+      }
+
+      .page-title {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 네비게이션 바 -->
+  <nav class="top-nav">
+    <a href="/ko/index.html" class="nav-logo">
+      <span class="nav-logo-mark">INS</span>
+      <span class="nav-logo-text">WING</span>
+    </a>
+    <div class="nav-menu">
+      <a href="/app/upload.html" class="nav-link">업로드</a>
+      <a href="/app/history.html" class="nav-link">히스토리</a>
+      <a href="/app/routine.html" class="nav-link active">루틴</a>
+      <a href="#" onclick="logout(); return false;" class="nav-link logout">로그아웃</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">나의 성장 루틴</h1>
+    <p class="page-subtitle">
+      최근 스윙 데이터를 바탕으로 오늘 집중해야 할 포인트를 정리한 페이지입니다.
+      업로드가 많아질수록 INSwing 코치가 Ian님 패턴을 더 똑똑하게 기억합니다.
+    </p>
+
+    <!-- 상단 그리드: 오늘 루틴 / 최근 7일 -->
+    <div class="grid">
+      <!-- 오늘의 루틴 카드 -->
+      <section class="card">
+        <div class="routine-main">
+          <div>
+            <div class="card-title">오늘의 루틴</div>
+            <div class="card-subtitle" id="routineDateText">2025년 11월 30일 · v0 (더미 데이터)</div>
+          </div>
+
+          <span class="routine-badge" id="routineGoalBadge">
+            오늘 목표 · 방향성과 피니시 안정감
+          </span>
+
+          <p class="routine-main-text" id="routineMainText">
+            최근 2주 동안 <strong>머리 흔들림</strong>과 <strong>피니시 불안정</strong> 태그가 자주 등장하고 있습니다.
+            오늘은 “머리 고정”과 “피니시 끝까지 유지” 두 가지만 신경 쓰는 루틴으로 가볍게 스윙해 보세요.
+          </p>
+
+          <div>
+            <div class="routine-focus-label">오늘의 포커스 태그</div>
+            <div class="focus-tags" id="focusTagContainer">
+              <!-- JS에서 채움 -->
+            </div>
+          </div>
+
+          <div class="routine-meta" id="routineMeta">
+            <span><span style="width:6px;height:6px;border-radius:999px;background:#22c55e;display:inline-block;"></span> 최근 14일 스윙 23개</span>
+            <span>평균 점수 58점 · 최고 72점</span>
+            <span>드라이버 위주 · 정면 촬영 80%</span>
+          </div>
+
+          <div class="routine-actions">
+            <button class="btn btn-primary" id="btnStartRoutine">
+              오늘 루틴 시작하기
+            </button>
+            <button class="btn btn-outline btn-disabled" id="btnEndRoutine">
+              오늘 루틴 마무리
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 최근 7일 카드 -->
+      <section class="card">
+        <div class="card-title">최근 7일 스윙 리포트</div>
+        <p class="card-subtitle">
+          간단한 흐름만 먼저 보여주는 v0 화면입니다. 추후 API와 그래프를 연결할 예정입니다.
+        </p>
+
+        <div class="stat-list" id="recentStatList">
+          <!-- JS에서 더미 데이터 채움 -->
+        </div>
+      </section>
+    </div>
+
+    <!-- 하단: 패턴 요약 / 대표 스윙 -->
+    <div class="bottom-grid">
+      <!-- 패턴 요약 -->
+      <section class="card">
+        <div class="card-title">나의 패턴 요약 (베타)</div>
+        <p class="card-subtitle">
+          최근 스윙에 자주 등장한 AI 태그를 기준으로 Ian님의 강점과 약점을 간단히 정리한 영역입니다.
+        </p>
+        <ul class="pattern-list" id="patternList">
+          <!-- JS에서 더미 텍스트 채움 -->
+        </ul>
+      </section>
+
+      <!-- 대표 스윙 -->
+      <section class="card">
+        <div class="card-title">최근 대표 스윙</div>
+        <p class="card-subtitle">
+          최근 업로드 중 점수가 높고 느낌(feeling)이 좋았던 스윙 하나를 대표 샷으로 추천합니다.
+        </p>
+
+        <div class="best-swing" id="bestSwingSection">
+          <div class="best-swing-thumb" id="bestSwingThumb">
+            <div class="best-swing-thumb-inner">
+              <span>대표 스윙 영상 썸네일 (추후 API 연결)</span>
+            </div>
+          </div>
+
+          <div class="best-swing-meta">
+            <div id="bestSwingTitle">드라이버 / 정면 · 점수 72점</div>
+            <div id="bestSwingDate">2025. 11. 29. 오후 2:41</div>
+            <div class="best-swing-tags" id="bestSwingTags">
+              <!-- JS에서 태그 채움 -->
+            </div>
+          </div>
+
+          <button class="btn btn-outline" id="btnGoBestSwing">
+            대표 스윙 상세보기
+          </button>
+        </div>
+
+        <div class="empty-state" id="noSwingState" style="display:none;">
+          최근 업로드된 스윙이 없습니다.  
+          먼저 스윙을 업로드하면 이 영역에 대표 스윙이 나타납니다.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/app/js/app.js"></script>
+  <script>
+    // 로그인 체크
+    requireLogin();
+
+    const focusTagContainer = document.getElementById('focusTagContainer');
+    const recentStatList = document.getElementById('recentStatList');
+    const patternList = document.getElementById('patternList');
+    const bestSwingSection = document.getElementById('bestSwingSection');
+    const noSwingState = document.getElementById('noSwingState');
+    const bestSwingTags = document.getElementById('bestSwingTags');
+    const btnStartRoutine = document.getElementById('btnStartRoutine');
+    const btnEndRoutine = document.getElementById('btnEndRoutine');
+    const btnGoBestSwing = document.getElementById('btnGoBestSwing');
+    const bestSwingThumb = document.getElementById('bestSwingThumb');
+    const toastEl = document.getElementById('toast');
+
+    // --- v0: 완전 더미 데이터 (향후 /routine/today API로 대체) ---
+    const dummyRoutine = {
+      dateText: '오늘 · 1일차 루틴',
+      goalText: '방향성과 피니시 안정감',
+      focusTags: ['머리 고정', '피니시 끝까지', '템포 3:1'],
+      recentStats: [
+        { label: '스윙 개수', valueText: '7개', ratio: 0.4 },
+        { label: '평균 점수', valueText: '58점', ratio: 0.58 },
+        { label: '머리 흔들림(평균)', valueText: '32%', ratio: 0.32 },
+        { label: '밸런스 점수(평균)', valueText: '0.94', ratio: 0.94 }
+      ],
+      patterns: [
+        '강점 · 밸런스 점수가 꾸준히 0.9 이상으로 유지되고 있습니다.',
+        '약점 · 머리 흔들림 태그가 최근 2주 동안 60% 이상의 스윙에서 발견되었습니다.',
+        '루틴 포인트 · 드라이버 정면 샷에서 피니시가 일찍 풀리는 패턴이 반복되고 있습니다.'
+      ],
+      bestSwing: {
+        exists: true,
+        id: 34,  // 추후 실제 ID로 교체
+        title: '드라이버 / 정면 · 점수 72점',
+        dateText: '2025. 11. 29. 오후 2:41',
+        tags: ['대표 샷', '밸런스 좋음', '템포 안정']
+      }
+    };
+
+    function showToast(message) {
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 2000);
+    }
+
+    function renderRoutine(dummy) {
+      // 날짜/목표 텍스트
+      const routineDateText = document.getElementById('routineDateText');
+      const routineGoalBadge = document.getElementById('routineGoalBadge');
+      const routineMainText = document.getElementById('routineMainText');
+
+      routineDateText.textContent = dummy.dateText;
+      routineGoalBadge.textContent = `오늘 목표 · ${dummy.goalText}`;
+      // routineMainText는 일단 기본 문구 유지(원하면 문자열 교체 가능)
+
+      // 포커스 태그
+      focusTagContainer.innerHTML = '';
+      dummy.focusTags.forEach(tag => {
+        const span = document.createElement('span');
+        span.className = 'focus-tag';
+        span.textContent = tag;
+        focusTagContainer.appendChild(span);
+      });
+
+      // 최근 7일 통계
+      recentStatList.innerHTML = '';
+      dummy.recentStats.forEach(stat => {
+        const item = document.createElement('div');
+        item.className = 'stat-item';
+
+        const labelRow = document.createElement('div');
+        labelRow.className = 'stat-label-row';
+        labelRow.innerHTML = `<span>${stat.label}</span><span>${stat.valueText}</span>`;
+
+        const bar = document.createElement('div');
+        bar.className = 'stat-bar';
+        const fill = document.createElement('div');
+        fill.className = 'stat-bar-fill';
+        fill.style.width = `${Math.min(Math.max(stat.ratio, 0), 1) * 100}%`;
+        bar.appendChild(fill);
+
+        item.appendChild(labelRow);
+        item.appendChild(bar);
+        recentStatList.appendChild(item);
+      });
+
+      // 패턴 리스트
+      patternList.innerHTML = '';
+      dummy.patterns.forEach(text => {
+        const li = document.createElement('li');
+        li.textContent = text;
+        patternList.appendChild(li);
+      });
+
+      // 대표 스윙
+      if (dummy.bestSwing && dummy.bestSwing.exists) {
+        bestSwingSection.style.display = 'flex';
+        noSwingState.style.display = 'none';
+
+        document.getElementById('bestSwingTitle').textContent = dummy.bestSwing.title;
+        document.getElementById('bestSwingDate').textContent = dummy.bestSwing.dateText;
+        bestSwingTags.innerHTML = '';
+        dummy.bestSwing.tags.forEach(t => {
+          const span = document.createElement('span');
+          span.className = 'best-swing-tag';
+          span.textContent = t;
+          bestSwingTags.appendChild(span);
+        });
+
+        const goResult = () => {
+          window.location.href = `/app/result.html?id=${dummy.bestSwing.id}`;
+        };
+        btnGoBestSwing.onclick = goResult;
+        bestSwingThumb.onclick = goResult;
+      } else {
+        bestSwingSection.style.display = 'none';
+        noSwingState.style.display = 'block';
+      }
+    }
+
+    // 버튼 액션 (현재는 UI 피드백만)
+    btnStartRoutine.addEventListener('click', () => {
+      showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
+    });
+
+    btnEndRoutine.addEventListener('click', () => {
+      showToast('루틴 마무리 기능은 추후 추가될 예정입니다.');
+    });
+
+    // 초기 렌더링
+    renderRoutine(dummyRoutine);
+  </script>
+</body>
+</html>
