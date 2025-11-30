@@ -282,7 +282,7 @@
             <span class="nav-logo-text">WING</span>
         </a>
         <div class="nav-menu">
-            <a href="/app/upload.html" class="nav-link">업로드</a>
+            <a href="/app/upload.html" class="nav-link active">업로드</a>
             <a href="/app/history.html" class="nav-link">히스토리</a>
             <a href="#" onclick="logout(); return false;" class="nav-link logout">로그아웃</a>
         </div>
@@ -349,45 +349,53 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const submitBtn = document.getElementById('submitBtn');
 
-        // 비디오 파일 선택 시 미리보기
+        const clubTypeSelect = document.getElementById('clubType');
+        const shotSideSelect = document.getElementById('shotSide');
+
+        // 비디오 파일 선택 시 크기 체크 + 미리보기
         videoFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                previewVideo.src = url;
-                videoPreview.style.display = 'block';
-            } else {
+
+            if (!file) {
                 videoPreview.style.display = 'none';
+                previewVideo.removeAttribute('src');
+                previewVideo.load();
+                return;
             }
-        });
-        // 파일 선택 시 크기 체크
-        videoFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                // 파일 크기 체크 (500MB = 500 * 1024 * 1024)
-                const maxSize = 500 * 1024 * 1024; // 500MB
-                if (file.size > maxSize) {
-                    alert(`파일 크기가 너무 큽니다. 최대 ${maxSize / (1024 * 1024)}MB까지 업로드 가능합니다.`);
-                    e.target.value = ''; // 파일 선택 초기화
-                    videoPreview.style.display = 'none';
-                    return;
-                }
-                
-                const url = URL.createObjectURL(file);
-                previewVideo.src = url;
-                videoPreview.style.display = 'block';
-            } else {
+
+            // 파일 크기 체크 (500MB)
+            const maxSize = 500 * 1024 * 1024; // 500MB
+            if (file.size > maxSize) {
+                alert(`파일 크기가 너무 큽니다. 최대 ${maxSize / (1024 * 1024)}MB까지 업로드 가능합니다.`);
+                e.target.value = ''; // 파일 선택 초기화
                 videoPreview.style.display = 'none';
+                previewVideo.removeAttribute('src');
+                previewVideo.load();
+                return;
             }
+
+            const url = URL.createObjectURL(file);
+            previewVideo.src = url;
+            videoPreview.style.display = 'block';
         });
-        // 폼 제출
+
         // 폼 제출
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const clubType = document.getElementById('clubType').value;
-            const shotSide = document.getElementById('shotSide').value;
+            const clubType = clubTypeSelect.value;
+            const shotSide = shotSideSelect.value;
             const videoFile = videoFileInput.files[0];
+
+            if (!clubType) {
+                alert('클럽 종류를 선택해주세요.');
+                return;
+            }
+
+            if (!shotSide) {
+                alert('촬영 방향을 선택해주세요.');
+                return;
+            }
 
             if (!videoFile) {
                 alert('영상 파일을 선택해주세요.');
@@ -400,26 +408,30 @@
             loadingDiv.style.display = 'block';
 
             try {
-                // FormData 생성
                 const formData = new FormData();
                 formData.append('video', videoFile);
                 formData.append('club_type', clubType);
                 formData.append('shot_side', shotSide);
 
-                // API 호출 - 🔥 여기를 수정 🔥
-                const response = await apiFetch('/swings', {  // ← /upload 제거!
+                // INSWING API 호출
+                const response = await apiFetch('/swings', {
                     method: 'POST',
-                    body: formData,
-                    headers: {} // FormData는 Content-Type 자동 설정
+                    body: formData
+                    // FormData 사용 시 Content-Type은 자동 설정
                 });
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert('업로드 완료! 분석 결과 페이지로 이동합니다.');
-                    window.location.href = `/app/result.html?id=${result.swing.id}`;
+                    if (result && result.swing && result.swing.id) {
+                        // alert('업로드 완료! 분석 결과 페이지로 이동합니다.');
+                        window.location.href = `/app/result.html?id=${result.swing.id}`;
+                    } else {
+                        throw new Error('서버에서 스윙 ID가 반환되지 않았습니다.');
+                    }
                 } else {
-                    const error = await response.json();
-                    alert('업로드 실패: ' + (error.error || '알 수 없는 오류'));
+                    const error = await response.json().catch(() => null);
+                    const message = error && error.error ? error.error : '알 수 없는 오류';
+                    alert('업로드 실패: ' + message);
                     form.style.display = 'block';
                     loadingDiv.style.display = 'none';
                     submitBtn.disabled = false;
