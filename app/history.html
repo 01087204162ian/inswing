@@ -461,8 +461,10 @@
                 sideBadge.textContent = sideText;
                 tags.appendChild(sideBadge);
 
-                // 점수(있을 때만) 표시 – 예: swing.overall_score or metrics_overall_score
-                let scoreValue = safeNumber(swing.overall_score, 0);
+                // 점수(있을 때만) 표시 – metrics.overall_score 사용
+                const metrics = swing.metrics || {};
+                let scoreValue = safeNumber(metrics.overall_score, 0);
+
                 if (scoreValue !== null) {
                     const scoreBadge = document.createElement('span');
                     scoreBadge.className = 'badge score';
