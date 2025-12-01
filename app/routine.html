@@ -706,14 +706,67 @@
     }
   }
 
-  // 버튼 액션 (현재는 UI 피드백만)
-  btnStartRoutine.addEventListener('click', () => {
-    showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
-  });
+  btnStartRoutine.addEventListener('click', async () => {
+  try {
+    const res = await apiFetch('/routine/start', {
+      method: 'POST'
+    });
+    const data = res.ok ? await res.json() : null;
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'START_FAILED');
 
-  btnEndRoutine.addEventListener('click', () => {
-    showToast('루틴 마무리 기능은 추후 추가될 예정입니다.');
-  });
+    showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
+    setRoutineButtons(true);
+  } catch (err) {
+    console.error('루틴 시작 오류:', err);
+    showToast('루틴 시작에 실패했습니다.');
+  }
+});
+
+btnEndRoutine.addEventListener('click', async () => {
+  try {
+    const res = await apiFetch('/routine/end', {
+      method: 'POST'
+    });
+    const data = res.ok ? await res.json() : null;
+    if (!res.ok || !data?.ok) throw new Error(data?.error || 'END_FAILED');
+
+    showToast('오늘 루틴을 마무리했습니다. 수고하셨습니다.');
+    setRoutineButtons(false);
+  } catch (err) {
+    console.error('루틴 마무리 오류:', err);
+    showToast('루틴 마무리에 실패했습니다.');
+  }
+});
+
+  function setRoutineButtons(hasActive) {
+      if (hasActive) {
+        btnStartRoutine.classList.add('btn-disabled');
+        btnStartRoutine.disabled = true;
+
+        btnEndRoutine.classList.remove('btn-disabled');
+        btnEndRoutine.disabled = false;
+      } else {
+        btnStartRoutine.classList.remove('btn-disabled');
+        btnStartRoutine.disabled = false;
+
+        btnEndRoutine.classList.add('btn-disabled');
+        btnEndRoutine.disabled = true;
+      }
+    }
+
+  async function loadActiveRoutine() {
+  try {
+    const res = await apiFetch('/routine/active');
+    if (!res.ok) throw new Error('ACTIVE_FAILED');
+    const data = await res.json();
+
+    setRoutineButtons(!!data.active);
+  } catch (err) {
+    console.error('활성 루틴 조회 오류:', err);
+    // 오류일 때는 일단 시작 버튼만 활성화
+    setRoutineButtons(false);
+  }
+}
 
   // 🔥 실제 API 호출
   async function loadRoutine() {
@@ -731,6 +784,7 @@
   }
 
   loadRoutine();
+  loadActiveRoutine();
 </script>
 
 </body>
