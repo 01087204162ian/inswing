@@ -747,17 +747,21 @@
       const res = await apiFetch('/routine/start', { method: 'POST' });
       const data = await res.json();
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data.message || 'START_ROUTINE_ERROR');
-      }
+      if (!res.ok || !data.ok) throw new Error(data.message || 'START_ROUTINE_ERROR');
 
       showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
       syncRoutineButtons(true);
+
+      // 🔥 업로드 페이지로 이동
+      setTimeout(() => {
+        window.location.href = '/app/upload.html';
+      }, 900);
     } catch (err) {
       console.error('루틴 시작 오류:', err);
       showToast('루틴 시작에 실패했습니다.');
     }
   });
+
 
   btnEndRoutine.addEventListener('click', async () => {
     try {
