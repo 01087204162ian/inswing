@@ -598,7 +598,7 @@
   <div id="toast" class="toast"></div>
 
   <script src="/app/js/app.js"></script>
-<script>
+  <script>
   // 1) 로그인 체크
   requireLogin();
 
@@ -691,6 +691,7 @@
       const bs = data.best_swing;
       document.getElementById('bestSwingTitle').textContent = bs.title;
       document.getElementById('bestSwingDate').textContent  = bs.date_text;
+
       bestSwingTags.innerHTML = '';
       (bs.tags || []).forEach(t => {
         const span = document.createElement('span');
@@ -707,7 +708,7 @@
     }
   }
 
-  // 5) 버튼 상태 동기화 (하나만 사용)
+  // 5) 버튼 상태 동기화 (단일 함수)
   function syncRoutineButtons(isActive) {
     if (isActive) {
       // 진행 중: 시작 비활성, 마무리 활성
@@ -735,6 +736,7 @@
       syncRoutineButtons(!!data.active);
     } catch (err) {
       console.error('루틴 상태 로드 오류:', err);
+      // 실패 시 기본 상태: 진행 중 아님
       syncRoutineButtons(false);
     }
   }
@@ -778,9 +780,7 @@
   async function loadRoutine() {
     try {
       const res = await apiFetch('/routine/today');
-      if (!res.ok) {
-        throw new Error('ROUTINE_TODAY_FAILED');
-      }
+      if (!res.ok) throw new Error('ROUTINE_TODAY_FAILED');
       const data = await res.json();
       renderRoutine(data);
     } catch (err) {
@@ -793,6 +793,7 @@
   loadRoutine();
   loadRoutineActive();
 </script>
+
 
 
 </body>
