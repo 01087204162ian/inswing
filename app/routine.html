@@ -599,21 +599,23 @@
 
   <script src="/app/js/app.js"></script>
 <script>
-  // 로그인 체크
+  // 1) 로그인 체크
   requireLogin();
 
+  // 2) DOM 캐시
   const focusTagContainer = document.getElementById('focusTagContainer');
-  const recentStatList = document.getElementById('recentStatList');
-  const patternList = document.getElementById('patternList');
-  const bestSwingSection = document.getElementById('bestSwingSection');
-  const noSwingState = document.getElementById('noSwingState');
-  const bestSwingTags = document.getElementById('bestSwingTags');
-  const btnStartRoutine = document.getElementById('btnStartRoutine');
-  const btnEndRoutine = document.getElementById('btnEndRoutine');
-  const btnGoBestSwing = document.getElementById('btnGoBestSwing');
-  const bestSwingThumb = document.getElementById('bestSwingThumb');
-  const toastEl = document.getElementById('toast');
+  const recentStatList    = document.getElementById('recentStatList');
+  const patternList       = document.getElementById('patternList');
+  const bestSwingSection  = document.getElementById('bestSwingSection');
+  const noSwingState      = document.getElementById('noSwingState');
+  const bestSwingTags     = document.getElementById('bestSwingTags');
+  const btnStartRoutine   = document.getElementById('btnStartRoutine');
+  const btnEndRoutine     = document.getElementById('btnEndRoutine');
+  const btnGoBestSwing    = document.getElementById('btnGoBestSwing');
+  const bestSwingThumb    = document.getElementById('bestSwingThumb');
+  const toastEl           = document.getElementById('toast');
 
+  // 3) 토스트
   function showToast(message) {
     if (!toastEl) return;
     toastEl.textContent = message;
@@ -623,18 +625,17 @@
     }, 2000);
   }
 
+  // 4) 루틴 데이터 렌더링
   function renderRoutine(data) {
-    const routineDateText = document.getElementById('routineDateText');
+    const routineDateText  = document.getElementById('routineDateText');
     const routineGoalBadge = document.getElementById('routineGoalBadge');
-    const routineMainText = document.getElementById('routineMainText');
+    const routineMainText  = document.getElementById('routineMainText');
 
     routineDateText.textContent = data.date_text || '오늘 루틴';
     routineGoalBadge.textContent = data.goal_text
       ? `오늘 목표 · ${data.goal_text}`
       : '오늘 목표 · 가볍게 리듬 만들기';
 
-    // 메인 설명은 서버에서 아직 안 넘기니 기존 문구 유지하거나,
-    // data.patterns[0] 을 첫 줄로 써도 된다.
     if (data.patterns && data.patterns.length) {
       routineMainText.textContent = data.patterns[0];
     }
@@ -658,7 +659,7 @@
       labelRow.className = 'stat-label-row';
       labelRow.innerHTML = `<span>${stat.label}</span><span>${stat.value_text}</span>`;
 
-      const bar = document.createElement('div');
+      const bar  = document.createElement('div');
       bar.className = 'stat-bar';
       const fill = document.createElement('div');
       fill.className = 'stat-bar-fill';
@@ -689,7 +690,7 @@
 
       const bs = data.best_swing;
       document.getElementById('bestSwingTitle').textContent = bs.title;
-      document.getElementById('bestSwingDate').textContent = bs.date_text;
+      document.getElementById('bestSwingDate').textContent  = bs.date_text;
       bestSwingTags.innerHTML = '';
       (bs.tags || []).forEach(t => {
         const span = document.createElement('span');
@@ -706,69 +707,74 @@
     }
   }
 
-  btnStartRoutine.addEventListener('click', async () => {
-  try {
-    const res = await apiFetch('/routine/start', {
-      method: 'POST'
-    });
-    const data = res.ok ? await res.json() : null;
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'START_FAILED');
+  // 5) 버튼 상태 동기화 (하나만 사용)
+  function syncRoutineButtons(isActive) {
+    if (isActive) {
+      // 진행 중: 시작 비활성, 마무리 활성
+      btnStartRoutine.classList.add('btn-disabled');
+      btnStartRoutine.disabled = true;
 
-    showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
-    setRoutineButtons(true);
-  } catch (err) {
-    console.error('루틴 시작 오류:', err);
-    showToast('루틴 시작에 실패했습니다.');
-  }
-});
+      btnEndRoutine.classList.remove('btn-disabled');
+      btnEndRoutine.disabled = false;
+    } else {
+      // 진행 중 아님: 시작 활성, 마무리 비활성
+      btnStartRoutine.classList.remove('btn-disabled');
+      btnStartRoutine.disabled = false;
 
-btnEndRoutine.addEventListener('click', async () => {
-  try {
-    const res = await apiFetch('/routine/end', {
-      method: 'POST'
-    });
-    const data = res.ok ? await res.json() : null;
-    if (!res.ok || !data?.ok) throw new Error(data?.error || 'END_FAILED');
-
-    showToast('오늘 루틴을 마무리했습니다. 수고하셨습니다.');
-    setRoutineButtons(false);
-  } catch (err) {
-    console.error('루틴 마무리 오류:', err);
-    showToast('루틴 마무리에 실패했습니다.');
-  }
-});
-
-  function setRoutineButtons(hasActive) {
-      if (hasActive) {
-        btnStartRoutine.classList.add('btn-disabled');
-        btnStartRoutine.disabled = true;
-
-        btnEndRoutine.classList.remove('btn-disabled');
-        btnEndRoutine.disabled = false;
-      } else {
-        btnStartRoutine.classList.remove('btn-disabled');
-        btnStartRoutine.disabled = false;
-
-        btnEndRoutine.classList.add('btn-disabled');
-        btnEndRoutine.disabled = true;
-      }
+      btnEndRoutine.classList.add('btn-disabled');
+      btnEndRoutine.disabled = true;
     }
-
-  async function loadActiveRoutine() {
-  try {
-    const res = await apiFetch('/routine/active');
-    if (!res.ok) throw new Error('ACTIVE_FAILED');
-    const data = await res.json();
-
-    setRoutineButtons(!!data.active);
-  } catch (err) {
-    console.error('활성 루틴 조회 오류:', err);
-    // 오류일 때는 일단 시작 버튼만 활성화
-    setRoutineButtons(false);
   }
-}
 
-  // 🔥 실제 API 호출
+  // 6) 현재 루틴 진행 여부 조회
+  async function loadRoutineActive() {
+    try {
+      const res = await apiFetch('/routine/active');
+      if (!res.ok) throw new Error('ACTIVE_ROUTINE_FAILED');
+      const data = await res.json();
+      syncRoutineButtons(!!data.active);
+    } catch (err) {
+      console.error('루틴 상태 로드 오류:', err);
+      syncRoutineButtons(false);
+    }
+  }
+
+  // 7) 버튼 액션 – 실제 API 연동
+  btnStartRoutine.addEventListener('click', async () => {
+    try {
+      const res = await apiFetch('/routine/start', { method: 'POST' });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || 'START_ROUTINE_ERROR');
+      }
+
+      showToast('오늘 루틴을 시작했습니다. 스윙을 업로드해 볼까요?');
+      syncRoutineButtons(true);
+    } catch (err) {
+      console.error('루틴 시작 오류:', err);
+      showToast('루틴 시작에 실패했습니다.');
+    }
+  });
+
+  btnEndRoutine.addEventListener('click', async () => {
+    try {
+      const res = await apiFetch('/routine/end', { method: 'POST' });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || 'END_ROUTINE_ERROR');
+      }
+
+      showToast('오늘 루틴을 마무리했습니다. 수고하셨습니다!');
+      syncRoutineButtons(false);
+    } catch (err) {
+      console.error('루틴 마무리 오류:', err);
+      showToast('루틴 마무리에 실패했습니다.');
+    }
+  });
+
+  // 8) 오늘 루틴 데이터 로드
   async function loadRoutine() {
     try {
       const res = await apiFetch('/routine/today');
@@ -783,9 +789,11 @@ btnEndRoutine.addEventListener('click', async () => {
     }
   }
 
+  // 9) 초기 로딩
   loadRoutine();
-  loadActiveRoutine();
+  loadRoutineActive();
 </script>
+
 
 </body>
 </html>
