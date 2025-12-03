@@ -223,10 +223,28 @@
         }
 
         .history-comment {
-            margin-top: 0.15rem;
-            font-size: 0.8rem;
-            color: #cbd5e1;
-            opacity: 0.86;
+            margin-top: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 3px solid rgba(96, 165, 250, 0.6);
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .history-comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .ai-coaching-icon {
+            font-size: 0.9rem;
         }
 
         .history-tag-row {
@@ -534,12 +552,29 @@
                 meta.className = 'history-meta';
                 meta.textContent = formatDate(swing.created_at);
 
-                // 코멘트 한 줄 요약
+                // AI 코칭 미리보기 (60자 제한)
                 if (swing.comment) {
                     const commentDiv = document.createElement('div');
                     commentDiv.className = 'history-comment';
+                    
+                    // AI 코칭 헤더
+                    const header = document.createElement('div');
+                    header.className = 'history-comment-header';
+                    const icon = document.createElement('span');
+                    icon.className = 'ai-coaching-icon';
+                    icon.textContent = '🤖';
+                    const label = document.createElement('span');
+                    label.textContent = 'Claude AI 코칭';
+                    header.appendChild(icon);
+                    header.appendChild(label);
+                    commentDiv.appendChild(header);
+                    
+                    // 코칭 스니펫 (60자 제한)
+                    const snippet = document.createElement('div');
                     const trimmed = swing.comment.trim();
-                    commentDiv.textContent = trimmed.length > 60 ? trimmed.slice(0, 60) + '…' : trimmed;
+                    snippet.textContent = trimmed.length > 60 ? trimmed.slice(0, 60) + '…' : trimmed;
+                    commentDiv.appendChild(snippet);
+                    
                     main.appendChild(commentDiv);
                 }
 
