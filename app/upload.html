@@ -509,6 +509,9 @@
                 const apiBase = 'https://api.inswing.ai';
                 
                 return new Promise((resolve, reject) => {
+                    let uploadProgressInterval = null;
+                    let analysisProgressInterval = null;
+
                     // 업로드 진행률 추적
                     xhr.upload.addEventListener('progress', (e) => {
                         if (e.lengthComputable) {
@@ -518,27 +521,49 @@
                     });
 
                     xhr.addEventListener('load', () => {
+                        // 업로드 진행률 인터벌 정리
+                        if (uploadProgressInterval) {
+                            clearInterval(uploadProgressInterval);
+                        }
+
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            // 업로드 완료 (30%)
+                            // 업로드 완료 (30%) → 즉시 AI 분석 단계로 전환
                             updateProgress(30, 'AI가 스윙을 분석하는 중...');
                             
-                            // AI 분석 단계 시뮬레이션 (30% → 70%)
-                            simulateProgress(30, 70, 3000, 'AI가 스윙을 분석하는 중...', () => {
-                                // 코칭 생성 단계 시뮬레이션 (70% → 100%)
-                                simulateProgress(70, 100, 2000, '코치가 피드백을 작성하는 중...', () => {
-                                    try {
-                                        const result = JSON.parse(xhr.responseText);
-                                        if (result && result.swing && result.swing.id) {
-                                            window.location.href = `/app/result.html?id=${result.swing.id}`;
-                                        } else {
-                                            throw new Error('서버에서 스윙 ID가 반환되지 않았습니다.');
-                                        }
-                                    } catch (error) {
-                                        reject(error);
-                                    }
-                                });
-                            });
+                            // 서버 응답 파싱
+                            let result;
+                            try {
+                                result = JSON.parse(xhr.responseText);
+                            } catch (e) {
+                                reject(new Error('서버 응답을 파싱할 수 없습니다.'));
+                                return;
+                            }
+
+                            // AI 분석 단계 진행률 시뮬레이션 (30% → 60%) - 서버 응답 대기 중에도 계속 진행
+                            let currentProgress = 30;
+                            analysisProgressInterval = setInterval(() => {
+                                currentProgress += 0.5; // 0.5%씩 증가
+                                if (currentProgress < 60) {
+                                    updateProgress(Math.round(currentProgress), 'AI가 스윙을 분석하는 중...');
+                                } else {
+                                    clearInterval(analysisProgressInterval);
+                                    // 코칭 생성 단계 (60% → 90%)
+                                    simulateProgress(60, 90, 1000, '코치가 피드백을 작성하는 중...', () => {
+                                        // 최종 완료 (90% → 100%)
+                                        simulateProgress(90, 100, 500, '거의 완료되었습니다...', () => {
+                                            if (result && result.swing && result.swing.id) {
+                                                window.location.href = `/app/result.html?id=${result.swing.id}`;
+                                            } else {
+                                                reject(new Error('서버에서 스윙 ID가 반환되지 않았습니다.'));
+                                            }
+                                        });
+                                    });
+                                }
+                            }, 100); // 100ms마다 업데이트 (부드러운 진행)
                         } else {
+                            if (analysisProgressInterval) {
+                                clearInterval(analysisProgressInterval);
+                            }
                             let error;
                             try {
                                 error = JSON.parse(xhr.responseText);
@@ -551,10 +576,22 @@
                     });
 
                     xhr.addEventListener('error', () => {
+                        if (uploadProgressInterval) {
+                            clearInterval(uploadProgressInterval);
+                        }
+                        if (analysisProgressInterval) {
+                            clearInterval(analysisProgressInterval);
+                        }
                         reject(new Error('인터넷 연결을 확인해주세요. 네트워크 오류가 발생했습니다.'));
                     });
 
                     xhr.addEventListener('abort', () => {
+                        if (uploadProgressInterval) {
+                            clearInterval(uploadProgressInterval);
+                        }
+                        if (analysisProgressInterval) {
+                            clearInterval(analysisProgressInterval);
+                        }
                         reject(new Error('업로드가 취소되었습니다.'));
                     });
 
@@ -632,10 +669,10 @@
                 loadingMessage.textContent = message;
             }
 
-            // 진행률 시뮬레이션 함수
+            // 진행률 시뮬레이션 함수 (부드러운 애니메이션)
             function simulateProgress(start, end, duration, message, callback) {
                 const startTime = Date.now();
-                const interval = 50; // 50ms마다 업데이트
+                const interval = 30; // 30ms마다 업데이트 (더 부드럽게)
                 
                 const timer = setInterval(() => {
                     const elapsed = Date.now() - startTime;
@@ -649,6 +686,7 @@
                     }
                 }, interval);
             }
+
         });
     </script><!--ddd-->
 </body>
