@@ -547,12 +547,7 @@
                 title.className = 'history-title';
                 title.textContent = `${clubText} / ${sideText}`;
 
-                // 날짜
-                const meta = document.createElement('div');
-                meta.className = 'history-meta';
-                meta.textContent = formatDate(swing.created_at);
-
-                // AI 코칭 미리보기 (60자 제한)
+                // AI 코칭 미리보기 (60자 제한) - 제목 바로 아래
                 if (swing.comment) {
                     const commentDiv = document.createElement('div');
                     commentDiv.className = 'history-comment';
@@ -577,6 +572,11 @@
                     
                     main.appendChild(commentDiv);
                 }
+
+                // 날짜
+                const meta = document.createElement('div');
+                meta.className = 'history-meta';
+                meta.textContent = formatDate(swing.created_at);
 
                 // 태그들
                 const tags = document.createElement('div');
