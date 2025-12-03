@@ -700,6 +700,20 @@
       patternList.appendChild(li);
     });
 
+    // 루틴 메타 정보 업데이트
+    const routineMeta = document.getElementById('routineMeta');
+    if (routineMeta && data.meta) {
+      const total = data.meta.total_swings || 0;
+      const avgScore = data.recent_stats?.find(s => s.key === 'avg_score')?.value_text || '0점';
+      const maxScore = data.recent_stats?.find(s => s.key === 'avg_score')?.value_text || '0점';
+      
+      // 기본 메타 정보만 업데이트 (클럽/방향 통계는 API에 없음)
+      routineMeta.innerHTML = `
+        <span><span style="width:6px;height:6px;border-radius:999px;background:#22c55e;display:inline-block;"></span> 최근 ${data.meta.days_range || 14}일 스윙 ${total}개</span>
+        <span>평균 점수 ${avgScore}</span>
+      `;
+    }
+
     // 대표 스윙
     if (!data.best_swing || !data.best_swing.exists) {
       bestSwingSection.style.display = 'none';

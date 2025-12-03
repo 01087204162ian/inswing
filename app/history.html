@@ -286,6 +286,46 @@
             border-color: rgba(52, 211, 153, 0.8);
             color: #4ade80;
         }
+
+        .badge.compare-negative {
+            background: rgba(255, 106, 106, 0.15);
+            border-color: rgba(255, 106, 106, 0.5);
+            color: #FF6A6A;
+        }
+
+        .badge.compare-positive {
+            background: rgba(60, 179, 113, 0.15);
+            border-color: rgba(60, 179, 113, 0.5);
+            color: #3CB371;
+        }
+
+        .badge.compare-neutral {
+            background: rgba(106, 106, 106, 0.15);
+            border-color: rgba(106, 106, 106, 0.5);
+            color: #6A6A6A;
+        }
+
+        .compare-tag-row {
+            margin-top: 0.4rem;
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .compare-tag {
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem; /* 약 12px */
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .compare-tag {
+                font-size: 0.7rem; /* 약 11px */
+            }
+        }
         .history-score {
             font-size: 1.1rem;
             font-weight: 700;
@@ -571,6 +611,34 @@
                     commentDiv.appendChild(snippet);
                     
                     main.appendChild(commentDiv);
+                }
+
+                // 평소 대비 비교 태그 (comment 아래, 날짜 위)
+                if (swing.previous_compare_tag) {
+                    const compareTagRow = document.createElement('div');
+                    compareTagRow.className = 'compare-tag-row';
+
+                    const compareTag = document.createElement('span');
+                    compareTag.className = 'compare-tag';
+                    
+                    // 태그 텍스트
+                    compareTag.textContent = swing.previous_compare_tag;
+
+                    // 색상 분류
+                    const tagText = swing.previous_compare_tag;
+                    if (tagText.includes('안정') || tagText.includes('개선')) {
+                        // 긍정: 안정/개선
+                        compareTag.classList.add('compare-positive');
+                    } else if (tagText.includes('유지')) {
+                        // 중립: 유지
+                        compareTag.classList.add('compare-neutral');
+                    } else {
+                        // 부정: 증가/흔들림/빠름/느림/감소 등
+                        compareTag.classList.add('compare-negative');
+                    }
+
+                    compareTagRow.appendChild(compareTag);
+                    main.appendChild(compareTagRow);
                 }
 
                 // 날짜
