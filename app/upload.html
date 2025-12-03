@@ -272,6 +272,35 @@
             animation: dots 1.5s steps(4, end) infinite;
         }
 
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 999px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            border: 1px solid rgba(52, 211, 153, 0.7);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+        }
+
+        .toast.error {
+            border-color: rgba(248, 113, 113, 0.7);
+            color: #fca5a5;
+        }
+
         .video-preview {
             margin-top: 1rem;
             border-radius: 8px;
@@ -388,6 +417,9 @@
         </div>
     </div>
 
+    <!-- 토스트 메시지 -->
+    <div id="toast" class="toast"></div>
+
     <script src="/app/js/app.js"></script>
     <script>
         // 로그인 체크
@@ -417,7 +449,7 @@
             // 파일 크기 체크 (500MB)
             const maxSize = 500 * 1024 * 1024; // 500MB
             if (file.size > maxSize) {
-                alert(`파일 크기가 너무 큽니다. 최대 ${maxSize / (1024 * 1024)}MB까지 업로드 가능합니다.`);
+                showToast(`파일 크기가 너무 큽니다. 최대 ${maxSize / (1024 * 1024)}MB까지 업로드 가능합니다.`, 'error');
                 e.target.value = ''; // 파일 선택 초기화
                 videoPreview.style.display = 'none';
                 previewVideo.removeAttribute('src');
@@ -439,17 +471,17 @@
             const videoFile = videoFileInput.files[0];
 
             if (!clubType) {
-                alert('클럽 종류를 선택해주세요.');
+                showToast('클럽 종류를 선택해주세요.', 'error');
                 return;
             }
 
             if (!shotSide) {
-                alert('촬영 방향을 선택해주세요.');
+                showToast('촬영 방향을 선택해주세요.', 'error');
                 return;
             }
 
             if (!videoFile) {
-                alert('영상 파일을 선택해주세요.');
+                showToast('영상 파일을 선택해주세요.', 'error');
                 return;
             }
 
@@ -519,7 +551,7 @@
                     });
 
                     xhr.addEventListener('error', () => {
-                        reject(new Error('네트워크 오류가 발생했습니다.'));
+                        reject(new Error('인터넷 연결을 확인해주세요. 네트워크 오류가 발생했습니다.'));
                     });
 
                     xhr.addEventListener('abort', () => {
@@ -534,17 +566,63 @@
                     xhr.send(formData);
                 }).catch((error) => {
                     console.error('업로드 오류:', error);
-                    alert('업로드 실패: ' + error.message);
+                    const userMessage = getUserFriendlyErrorMessage(error.message);
+                    showToast(userMessage, 'error');
                     form.style.display = 'block';
                     loadingDiv.style.display = 'none';
                     submitBtn.disabled = false;
                 });
             } catch (error) {
                 console.error('업로드 오류:', error);
-                alert('업로드 중 오류가 발생했습니다: ' + error.message);
+                const userMessage = getUserFriendlyErrorMessage(error.message);
+                showToast(userMessage, 'error');
                 form.style.display = 'block';
                 loadingDiv.style.display = 'none';
                 submitBtn.disabled = false;
+            }
+
+            // 사용자 친화적 에러 메시지 변환
+            function getUserFriendlyErrorMessage(errorMessage) {
+                const message = errorMessage.toLowerCase();
+                
+                if (message.includes('스윙 동작을 감지하지 못했습니다') || message.includes('스윙 자세를 감지할 수 없습니다')) {
+                    return '스윙 동작을 감지하지 못했습니다. 스윙 전체가 화면에 나오도록, 사람의 몸이 잘 보이게 다시 촬영해 주세요.';
+                }
+                if (message.includes('스윙하는 사람의 전체 몸이 화면에 충분히 보이지 않습니다')) {
+                    return '스윙하는 사람의 전체 몸이 화면에 충분히 보이지 않습니다. 카메라를 더 멀리 두고 다시 촬영해 주세요.';
+                }
+                if (message.includes('네트워크') || message.includes('network') || message.includes('인터넷')) {
+                    return '인터넷 연결을 확인해주세요. 네트워크 오류가 발생했습니다.';
+                }
+                if (message.includes('timeout') || message.includes('타임아웃')) {
+                    return '요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.';
+                }
+                if (message.includes('취소')) {
+                    return '업로드가 취소되었습니다.';
+                }
+                if (message.includes('서버') || message.includes('server')) {
+                    return '서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                }
+                
+                // 기본 메시지
+                return errorMessage || '업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+            }
+
+            // 토스트 메시지 표시 함수
+            function showToast(message, type = 'info') {
+                const toastEl = document.getElementById('toast');
+                if (!toastEl) return;
+                
+                toastEl.textContent = message;
+                toastEl.className = 'toast';
+                if (type === 'error') {
+                    toastEl.classList.add('error');
+                }
+                toastEl.classList.add('show');
+                
+                setTimeout(() => {
+                    toastEl.classList.remove('show');
+                }, 3000);
             }
 
             // 진행률 업데이트 함수
@@ -572,6 +650,6 @@
                 }, interval);
             }
         });
-    </script>
+    </script><!--ddd-->
 </body>
 </html>
