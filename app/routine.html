@@ -344,6 +344,17 @@
     .best-swing-thumb-inner {
       padding-top: 56%;
       position: relative;
+      width: 100%;
+    }
+
+    .best-swing-thumb-inner video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
     }
 
     .best-swing-thumb-inner span {
@@ -353,6 +364,7 @@
       transform: translate(-50%, -50%);
       font-size: 0.9rem;
       color: #9ca3af;
+      z-index: 1;
     }
 
     .best-swing-meta {
@@ -699,6 +711,42 @@
         span.textContent = t;
         bestSwingTags.appendChild(span);
       });
+
+      // 비디오 썸네일 표시
+      const thumbInner = bestSwingThumb.querySelector('.best-swing-thumb-inner');
+      if (thumbInner) {
+        thumbInner.innerHTML = ''; // 기존 텍스트 제거
+        
+        if (bs.video_url) {
+          const video = document.createElement('video');
+          video.src = bs.video_url;
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = 'metadata';
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.style.borderRadius = '12px';
+          
+          // 첫 프레임 표시를 위해 로드
+          video.addEventListener('loadedmetadata', () => {
+            video.currentTime = 0.1; // 첫 프레임 근처로 이동
+          });
+          
+          thumbInner.appendChild(video);
+        } else {
+          // 비디오 URL이 없으면 플레이스홀더 표시
+          const placeholder = document.createElement('span');
+          placeholder.textContent = '비디오 없음';
+          placeholder.style.position = 'absolute';
+          placeholder.style.left = '50%';
+          placeholder.style.top = '50%';
+          placeholder.style.transform = 'translate(-50%, -50%)';
+          placeholder.style.fontSize = '0.9rem';
+          placeholder.style.color = '#9ca3af';
+          thumbInner.appendChild(placeholder);
+        }
+      }
 
       const goResult = () => {
         window.location.href = `/app/result.html?id=${bs.id}`;
