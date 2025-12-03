@@ -399,8 +399,90 @@
         }
 
         /* AI 코멘트 키워드 태그 */
+        /* AI 코칭 카드 스타일 */
+        .ai-coaching-card {
+            margin-bottom: 1.5rem;
+            padding: 1.2rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(96, 165, 250, 0.5);
+            position: relative;
+        }
+
+        .ai-coaching-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .ai-coaching-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(34, 197, 94, 0.2));
+            border: 1px solid rgba(96, 165, 250, 0.4);
+        }
+
+        .ai-badge-icon {
+            font-size: 1rem;
+        }
+
+        .ai-badge-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .regenerate-btn {
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            color: #60a5fa;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .regenerate-btn:hover {
+            background: rgba(96, 165, 250, 0.2);
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: rotate(180deg);
+        }
+
+        .regenerate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-comment-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e5e7eb;
+            min-height: 3rem;
+        }
+
+        .loading-dots {
+            color: #94a3b8;
+        }
+
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
         .ai-keywords {
-            margin-top: 0.6rem;
+            margin-top: 0.8rem;
             display: flex;
             flex-wrap: wrap;
             gap: 0.4rem;
@@ -556,16 +638,22 @@
             <div class="card">
                 <h2 style="margin-bottom: 1rem; color: #cbd5e1;">AI 분석 지표 & 코멘트</h2>
 
-                <div id="aiCommentBox"
-                    style="margin-bottom:0.6rem;padding:0.9rem 1rem;
-                            border-radius:12px;
-                            background:rgba(15,23,42,0.8);
-                            border:1px solid rgba(96,165,250,0.5);
-                            font-size:0.9rem; line-height:1.5;">
-                    분석 코멘트를 불러오는 중입니다...
+                <!-- AI 코칭 카드 -->
+                <div class="ai-coaching-card" id="aiCoachingCard">
+                    <div class="ai-coaching-header">
+                        <div class="ai-coaching-badge">
+                            <span class="ai-badge-icon">🤖</span>
+                            <span class="ai-badge-text">Claude AI 코칭</span>
+                        </div>
+                        <button class="regenerate-btn" id="regenerateBtn" style="display:none;" title="코칭 다시 생성">
+                            <span>🔄</span>
+                        </button>
+                    </div>
+                    <div id="aiCommentBox" class="ai-comment-content">
+                        <div class="loading-dots">분석 코멘트를 불러오는 중</div>
+                    </div>
+                    <div id="aiKeywords" class="ai-keywords"></div>
                 </div>
-
-                <div id="aiKeywords" class="ai-keywords"></div>
 
                 <!-- 주요 지표 4개 -->
                 <div class="metrics-grid-main">
@@ -790,6 +878,78 @@
             return [...new Set(keywords)];
         }
 
+        // 타이핑 애니메이션 함수
+        function typeText(element, text, callback) {
+            element.innerHTML = '';
+            let index = 0;
+            const speed = 20; // 타이핑 속도 (ms)
+
+            function type() {
+                if (index < text.length) {
+                    element.textContent = text.substring(0, index + 1);
+                    index++;
+                    setTimeout(type, speed);
+                } else {
+                    if (callback) callback();
+                }
+            }
+
+            type();
+        }
+
+        // 코칭 다시 생성 함수
+        async function regenerateCoaching() {
+            const regenerateBtn = document.getElementById('regenerateBtn');
+            const aiCommentBox = document.getElementById('aiCommentBox');
+            const aiKeywordsEl = document.getElementById('aiKeywords');
+
+            if (!swingId) {
+                showToast('스윙 ID가 없습니다.');
+                return;
+            }
+
+            regenerateBtn.disabled = true;
+            aiCommentBox.innerHTML = '<div class="loading-dots">새로운 코칭을 생성하는 중</div>';
+            aiKeywordsEl.innerHTML = '';
+
+            try {
+                const response = await apiFetch(`/swings/${swingId}/regenerate-coaching`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('코칭 재생성에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                if (data && data.coaching) {
+                    typeText(aiCommentBox, data.coaching, () => {
+                        const keywords = extractKeywordsFromComment(data.coaching);
+                        if (keywords.length > 0) {
+                            keywords.forEach(k => {
+                                const span = document.createElement('span');
+                                span.className = 'ai-keyword-badge';
+                                span.textContent = k;
+                                aiKeywordsEl.appendChild(span);
+                            });
+                        }
+                        showToast('새로운 코칭이 생성되었습니다.');
+                    });
+                } else {
+                    throw new Error('코칭 데이터가 없습니다.');
+                }
+            } catch (error) {
+                console.error('코칭 재생성 오류:', error);
+                aiCommentBox.innerHTML = '<div style="color: #f87171;">코칭 재생성에 실패했습니다. 잠시 후 다시 시도해주세요.</div>';
+                showToast('코칭 재생성에 실패했습니다.');
+            } finally {
+                regenerateBtn.disabled = false;
+            }
+        }
+
+        // 다시 생성 버튼 이벤트 리스너
+        document.getElementById('regenerateBtn')?.addEventListener('click', regenerateCoaching);
+
         // 분석 결과 로드
         async function loadResult() {
             try {
@@ -828,22 +988,25 @@
                 metaTempo.textContent = `템포 ${tempoText === '-' ? '-' : tempoText}`;
                 metaScore.textContent = `종합 ${overallText === '-' ? '-' : overallText}점`;
 
-                // AI 코멘트
+                // AI 코멘트 (타이핑 애니메이션)
+                const regenerateBtn = document.getElementById('regenerateBtn');
                 if (comment) {
-                    aiCommentBox.textContent = comment;
-                    const keywords = extractKeywordsFromComment(comment);
-                    aiKeywordsEl.innerHTML = '';
-                    if (keywords.length > 0) {
-                        keywords.forEach(k => {
-                            const span = document.createElement('span');
-                            span.className = 'ai-keyword-badge';
-                            span.textContent = k;
-                            aiKeywordsEl.appendChild(span);
-                        });
-                    }
+                    regenerateBtn.style.display = 'block';
+                    typeText(aiCommentBox, comment, () => {
+                        const keywords = extractKeywordsFromComment(comment);
+                        aiKeywordsEl.innerHTML = '';
+                        if (keywords.length > 0) {
+                            keywords.forEach(k => {
+                                const span = document.createElement('span');
+                                span.className = 'ai-keyword-badge';
+                                span.textContent = k;
+                                aiKeywordsEl.appendChild(span);
+                            });
+                        }
+                    });
                 } else {
-                    aiCommentBox.textContent =
-                        '이번 스윙에 대한 코멘트가 충분하지 않습니다. 다음 스윙부터 데이터를 더 쌓아볼게요.';
+                    regenerateBtn.style.display = 'none';
+                    aiCommentBox.innerHTML = '<div class="loading-dots">이번 스윙에 대한 코멘트가 충분하지 않습니다. 다음 스윙부터 데이터를 더 쌓아볼게요.</div>';
                     aiKeywordsEl.innerHTML = '';
                 }
 

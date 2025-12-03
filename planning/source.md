@@ -5777,3 +5777,15 @@ CREATE TABLE `feelings` (
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
 
+	#	Time	Action	Message	Duration / Fetch
+0	1	12:15:11	CREATE TABLE routine_sessions (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   user_id INT NOT NULL,
+   start_at DATETIME NOT NULL,
+   end_at DATETIME DEFAULT NULL,
+   status ENUM('IN_PROGRESS', 'COMPLETED') NOT NULL DEFAULT 'IN_PROGRESS',
+   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+   INDEX idx_user_start (user_id, start_at)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4	Error Code: 1046. No database selected
+ Select the default DB to be used by double-clicking its name in the SCHEMAS list in the sidebar.	0.016 sec
