@@ -192,6 +192,19 @@
       alert("먼저 세션에 join 해주세요.");
       return;
     }
+
+    // 채널이 아직 joined 상태가 아니면 전송하지 않음
+    if (channel.state !== "joined") {
+      log(`⚠️ 채널 상태가 joined가 아닙니다. 현재 상태: ${channel.state}`);
+      return;
+    }
+
+    // 소켓 연결 상태 확인
+    if (!socket || socket.connectionState() !== "open") {
+      log("⚠️ 소켓이 열려 있지 않습니다. 다시 연결 후 시도하세요.");
+      return;
+    }
+
     const text = messageInput.value.trim();
     if (!text) return;
 
