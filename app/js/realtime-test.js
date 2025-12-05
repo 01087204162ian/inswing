@@ -13,6 +13,7 @@
   let channel = null;
   let isJoining = false;
   let isJoined = false;
+  let lastSessionId = null;
 
   function log(...args) {
     const msg = args.map(a => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
@@ -59,6 +60,9 @@
       log("✅ 소켓 연결 성공");
       connectBtn.disabled = false;
       disconnectBtn.disabled = false;
+      if (lastSessionId) {
+        log(`ℹ️ 소켓 재연결 완료. 세션(${lastSessionId})에 다시 JOIN 해 주세요.`);
+      }
     });
     
     socket.onError((error) => {
@@ -66,6 +70,9 @@
       if (error.target && error.target.readyState === WebSocket.CLOSED) {
         log("   → WebSocket이 닫혔습니다. 서버가 실행 중인지 확인하세요.");
       }
+      isJoined = false;
+      channel = null;
+      sendBtn.disabled = true;
     });
     
     socket.onClose((event) => {
@@ -84,6 +91,9 @@
       
       connectBtn.disabled = false;
       disconnectBtn.disabled = true;
+      isJoined = false;
+      channel = null;
+      sendBtn.disabled = true;
     });
     
     socket.connect();
@@ -133,6 +143,9 @@
     }
 
     isJoining = true;
+    isJoined = false;
+    lastSessionId = sessionId;
+    sendBtn.disabled = true;
     channel = socket.channel("session:" + sessionId, {});
     log(`➡️ 채널 join 시도: session:${sessionId}`);
 
@@ -179,6 +192,7 @@
 
     channel.onClose(() => {
       isJoined = false;
+      channel = null;
       sendBtn.disabled = true;
       log("ℹ️ 채널이 닫혔습니다.");
     });
