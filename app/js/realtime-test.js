@@ -12,6 +12,7 @@
   let socket = null;
   let channel = null;
   let isJoining = false;
+  let isJoined = false;
 
   function log(...args) {
     const msg = args.map(a => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
@@ -139,16 +140,19 @@
       .join()
       .receive("ok", resp => {
         isJoining = false;
+        isJoined = true;
         log("✅ JOIN OK:", JSON.stringify(resp));
         connectBtn.disabled = false;
       })
       .receive("error", err => {
         isJoining = false;
+        isJoined = false;
         log("❌ JOIN ERROR:", JSON.stringify(err));
         connectBtn.disabled = false;
       })
       .receive("timeout", () => {
         isJoining = false;
+        isJoined = false;
         log("⏱️ JOIN TIMEOUT: 서버 응답이 없습니다.");
         connectBtn.disabled = false;
       });
@@ -169,6 +173,11 @@
     channel.on("presence:diff", payload => {
       log("👥 [presence:diff]", JSON.stringify(payload));
     });
+
+    channel.onClose(() => {
+      isJoined = false;
+      log("ℹ️ 채널이 닫혔습니다.");
+    });
   }
 
   function disconnect() {
@@ -185,6 +194,7 @@
     }
     connectBtn.disabled = false;
     disconnectBtn.disabled = true;
+    isJoined = false;
   }
 
   function sendMessage() {
@@ -194,7 +204,7 @@
     }
 
     // 채널이 아직 joined 상태가 아니면 전송하지 않음
-    if (channel.state !== "joined") {
+    if (!isJoined || channel.state !== "joined") {
       log(`⚠️ 채널 상태가 joined가 아닙니다. 현재 상태: ${channel.state}`);
       return;
     }
