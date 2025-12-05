@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>INSWING Realtime 테스트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>INSWING Realtime 테스트 페이지</h1>
+
+  <section>
+    <label>
+      세션 ID:
+      <input id="sessionId" type="text" value="test-session-1" />
+    </label>
+    <button id="connectBtn">소켓 연결 & 세션 참가</button>
+  </section>
+
+  <section style="margin-top:1rem;">
+    <label>
+      메시지:
+      <input id="messageInput" type="text" placeholder="보낼 메시지" />
+    </label>
+    <button id="sendBtn">메시지 전송 (chat:new)</button>
+  </section>
+
+  <section style="margin-top:1rem;">
+    <h2>로그</h2>
+    <pre id="log" style="background:#111;color:#0f0;padding:8px;min-height:150px;white-space:pre-wrap;"></pre>
+  </section>
+
+  <!-- Phoenix JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.7/priv/static/phoenix.min.js"></script>
+  <!-- 테스트 전용 스크립트 -->
+  <script src="/app/js/realtime-test.js"></script>
+</body>
+</html>
+
