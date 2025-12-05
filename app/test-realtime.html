@@ -10,10 +10,22 @@
 
   <section>
     <label>
+      서버 URL:
+      <select id="serverUrl">
+        <option value="wss://realtime.inswing.ai/socket">프로덕션 (realtime.inswing.ai)</option>
+        <option value="ws://localhost:4100/socket">로컬 개발 (localhost:4100)</option>
+        <option value="ws://localhost:4000/socket">로컬 개발 (localhost:4000)</option>
+      </select>
+    </label>
+  </section>
+
+  <section style="margin-top:1rem;">
+    <label>
       세션 ID:
       <input id="sessionId" type="text" value="test-session-1" />
     </label>
     <button id="connectBtn">소켓 연결 & 세션 참가</button>
+    <button id="disconnectBtn" style="margin-left:8px;">연결 끊기</button>
   </section>
 
   <section style="margin-top:1rem;">
