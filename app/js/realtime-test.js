@@ -143,18 +143,21 @@
         isJoined = true;
         log("✅ JOIN OK:", JSON.stringify(resp));
         connectBtn.disabled = false;
+        sendBtn.disabled = false;
       })
       .receive("error", err => {
         isJoining = false;
         isJoined = false;
         log("❌ JOIN ERROR:", JSON.stringify(err));
         connectBtn.disabled = false;
+        sendBtn.disabled = true;
       })
       .receive("timeout", () => {
         isJoining = false;
         isJoined = false;
         log("⏱️ JOIN TIMEOUT: 서버 응답이 없습니다.");
         connectBtn.disabled = false;
+        sendBtn.disabled = true;
       });
 
     // 서버에서 오는 이벤트 수신 (중복 방지를 위해 기존 리스너 제거 후 등록)
@@ -176,6 +179,7 @@
 
     channel.onClose(() => {
       isJoined = false;
+      sendBtn.disabled = true;
       log("ℹ️ 채널이 닫혔습니다.");
     });
   }
@@ -195,6 +199,7 @@
     connectBtn.disabled = false;
     disconnectBtn.disabled = true;
     isJoined = false;
+    sendBtn.disabled = true;
   }
 
   function sendMessage() {
@@ -258,6 +263,7 @@
   disconnectBtn.disabled = true;
 
   sendBtn.addEventListener("click", sendMessage);
+  sendBtn.disabled = true;
 
   // Enter 키로 메시지 전송
   messageInput.addEventListener("keypress", (e) => {
