@@ -23,7 +23,20 @@
       return;
     }
 
-    socket = new window.Phoenix.Socket("wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0");
+    socket = new window.Phoenix.Socket("wss://realtime.inswing.ai/socket");
+    
+    socket.onOpen(() => {
+      log("✅ 소켓 연결 성공");
+    });
+    
+    socket.onError((error) => {
+      log("❌ 소켓 연결 오류:", error);
+    });
+    
+    socket.onClose((event) => {
+      log("🔌 소켓 연결 종료:", event.code, event.reason);
+    });
+    
     socket.connect();
     log("🔌 소켓 연결 시도...");
   }
