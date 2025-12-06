@@ -185,13 +185,13 @@
         return;
       }
   
-      if (!isJoined || channel.state !== 'joined') {
+      /*if (!isJoined || channel.state !== 'joined') {
         console.warn('[Realtime] 채널이 아직 joined 상태가 아닙니다.', {
           isJoined,
           state: channel.state,
         });
         return;
-      }
+      }*/
   
       const input = $('realtimeMessageInput');
       if (!input) return;
