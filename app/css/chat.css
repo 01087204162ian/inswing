@@ -1,23 +1,27 @@
 /* INSWING 채팅 UI 스타일 */
 
-.chat-message {
+.realtime-message-list .chat-message {
   display: flex !important;
   flex-direction: column !important;
   max-width: 70%;
   margin: 6px 0;
 }
 
-.chat-message.golfer {
-  align-self: flex-end;
+.realtime-message-list .chat-message.golfer {
+  align-self: flex-end !important;
   text-align: right;
+  margin-left: auto;
+  margin-right: 0;
 }
 
-.chat-message.coach {
-  align-self: flex-start;
+.realtime-message-list .chat-message.coach {
+  align-self: flex-start !important;
   text-align: left;
+  margin-left: 0;
+  margin-right: auto;
 }
 
-.bubble {
+.realtime-message-list .bubble {
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 15px;
@@ -25,17 +29,17 @@
   word-wrap: break-word;
 }
 
-.chat-message.golfer .bubble {
+.realtime-message-list .chat-message.golfer .bubble {
   background: #D1E8FF;
   color: #1e293b;
 }
 
-.chat-message.coach .bubble {
+.realtime-message-list .chat-message.coach .bubble {
   background: #F1F1F1;
   color: #1e293b;
 }
 
-.meta {
+.realtime-message-list .meta {
   font-size: 11px;
   margin-top: 3px;
   opacity: 0.6;
@@ -43,7 +47,7 @@
 
 /* 모바일 대응 */
 @media (max-width: 600px) {
-  .chat-message {
+  .realtime-message-list .chat-message {
     max-width: 85%;
   }
 }

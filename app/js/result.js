@@ -144,7 +144,10 @@
     // 메시지 렌더링 함수 (지시서 요구사항 반영)
     function renderMessage(payload) {
       const { author_role, message, meta } = payload;
-      const role = author_role || 'golfer';
+      // author_role이 'golfer'가 아니면 'coach'로 처리
+      const role = (author_role === 'golfer') ? 'golfer' : 'coach';
+      
+      console.log('[Realtime] renderMessage - author_role:', author_role, '→ role:', role);
       
       const time = new Date(meta?.ts || Date.now()).toLocaleTimeString('ko-KR', {
         hour: '2-digit',
