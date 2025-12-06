@@ -211,8 +211,7 @@
                 console.error('[Realtime] ❌ event:new 오류:', err);
             });
 
-        // 로컬에서 즉시 표시 (자신의 메시지)
-        handleIncomingMessage(payload);
+        // 메시지 렌더링은 event:new 수신 시에만 실행됨 (중복 방지)
     }
 
     // 연결 상태 업데이트
