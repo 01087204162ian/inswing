@@ -89,16 +89,22 @@
         .join()
         .receive("ok", (resp) => {
           log("✅ JOIN OK:", JSON.stringify(resp));
-  
-          // 딜레이 주어 JOIN 후 push 타이밍 문제 해결
-          setTimeout(() => {
-            isJoined = true;
-            isJoining = false;
-            sendBtn.disabled = false;
-          }, 200);
+          isJoining = false;
+          isJoined = true;
+          sendBtn.disabled = false;
         })
-        .receive("error", (err) => log("❌ JOIN ERROR:", JSON.stringify(err)))
-        .receive("timeout", () => log("⏱️ JOIN TIMEOUT"));
+        .receive("error", (err) => {
+          log("❌ JOIN ERROR:", JSON.stringify(err));
+          isJoining = false;
+          isJoined = false;
+          sendBtn.disabled = true;
+        })
+        .receive("timeout", () => {
+          log("⏱️ JOIN TIMEOUT");
+          isJoining = false;
+          isJoined = false;
+          sendBtn.disabled = true;
+        });
   
       /* ---- 채널 이벤트 ---- */
       channel.on("chat:added", payload => {
@@ -116,15 +122,23 @@
   
       channel.onClose(() => {
         isJoined = false;
+        isJoining = false;
         sendBtn.disabled = true;
         log("ℹ️ 채널 종료됨");
+      });
+
+      // 채널 에러 상태 추적
+      channel.onError(() => {
+        log("⚠️ 채널 에러 발생");
+        isJoined = false;
+        sendBtn.disabled = true;
       });
     }
   
     /* -------------------- 메시지 전송 -------------------- */
     function sendMessage() {
-      if (!channel || !isJoined || channel.state !== "joined") {
-        return log(`⚠️ 채널이 아직 joined 상태가 아닙니다. 현재: ${channel?.state}`);
+      if (!channel || !isJoined) {
+        return log(`⚠️ 채널이 아직 joined 상태가 아닙니다. isJoined: ${isJoined}, channel.state: ${channel?.state}`);
       }
   
       const msg = messageInput.value.trim();
