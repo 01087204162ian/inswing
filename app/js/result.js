@@ -1,29 +1,250 @@
-// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (순수 WebSocket 버전)
+// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (수정 안정 버전)
 (function () {
     'use strict';
   
-    // ---------- 내부 상태 ----------
-    let ws = null;
-    let joined = false;
-    let joinRef = 1;
-    let pushRef = 1;
-    let topic = null;
-  
-    const WS_URL = 'wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0';
+    let socket = null;
+    let channel = null;
+    let isJoined = false;
+    let messageRef = 0;
+    let isRealtimeInitialized = false; // 중복 초기화 방지
   
     const $ = (id) => document.getElementById(id);
   
     function getSwingId() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('id');
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
     }
   
-    // ---------- UI 보조 ----------
-    function updateConnectionStatus(status) {
-      const el = $('realtimeStatus');
-      if (!el) return;
+    // -----------------------------
+    // WebSocket + 채널 초기화
+    // -----------------------------
+    function initRealtimeCoaching() {
+      const swingId = getSwingId();
+      if (!swingId) {
+        console.warn('[Realtime] swingId가 없어 실시간 코칭을 시작할 수 없습니다.');
+        return;
+      }
   
-      const textMap = {
+      if (typeof Phoenix === 'undefined') {
+        console.warn('[Realtime] Phoenix Socket 라이브러리가 로드되지 않았습니다.');
+        return;
+      }
+  
+      // 이미 소켓이 열려 있으면 재사용
+      if (socket && socket.connectionState() === 'open') {
+        console.log('[Realtime] 기존 소켓 재사용, 채널만 join');
+        joinChannel(swingId);
+        return;
+      }
+  
+      const socketUrl = 'wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0';
+      console.log('[Realtime] WebSocket 연결 시도:', socketUrl);
+  
+      socket = new Phoenix.Socket(socketUrl, {
+        reconnectAfterMs: () => 1000,
+      });
+  
+      socket.onOpen(() => {
+        console.log('[Realtime] ✅ 소켓 연결 성공');
+        updateConnectionStatus('connected');
+        joinChannel(swingId);
+      });
+  
+      socket.onError((error) => {
+        console.error('[Realtime] ❌ 소켓 연결 오류:', error);
+        updateConnectionStatus('error');
+        enableChatInput(false);
+      });
+  
+      socket.onClose(() => {
+        console.log('[Realtime] 🔌 소켓 연결 종료');
+        isJoined = false;
+        channel = null;
+        updateConnectionStatus('disconnected');
+        enableChatInput(false);
+      });
+  
+      socket.connect();
+    }
+  
+    // -----------------------------
+    // 채널 join
+    // -----------------------------
+    function joinChannel(swingId) {
+      if (!socket || socket.connectionState() !== 'open') {
+        console.warn('[Realtime] 소켓이 연결되지 않아 채널에 join할 수 없습니다.');
+        return;
+      }
+  
+      // 이전 채널 정리
+      if (channel) {
+        try {
+          channel.leave();
+        } catch (e) {
+          console.warn('[Realtime] 이전 채널 leave 중 오류:', e);
+        }
+        channel = null;
+        isJoined = false;
+      }
+  
+      const topic = `session:${swingId}`;
+      console.log('[Realtime] 채널 join 시도:', topic);
+  
+      channel = socket.channel(topic, {});
+  
+      channel
+        .join()
+        .receive('ok', (resp) => {
+          console.log('[Realtime] ✅ JOIN OK:', resp);
+          isJoined = true;
+          updateConnectionStatus('joined');
+          setTimeout(() => enableChatInput(true), 100);
+        })
+        .receive('error', (err) => {
+          console.error('[Realtime] ❌ JOIN ERROR:', err);
+          isJoined = false;
+          updateConnectionStatus('error');
+          enableChatInput(false);
+        })
+        .receive('timeout', () => {
+          console.warn('[Realtime] ⏱️ JOIN TIMEOUT');
+          isJoined = false;
+          updateConnectionStatus('timeout');
+          enableChatInput(false);
+        });
+  
+      // 서버가 브로드캐스트하는 메시지 수신
+      // (테스트 스크립트 기준: chat:added, 필요시 event:new 도 함께 처리)
+      channel.on('chat:added', (payload) => {
+        console.log('[Realtime] 💬 chat:added 수신:', payload);
+        handleIncomingMessage(payload);
+      });
+  
+      channel.on('event:new', (payload) => {
+        console.log('[Realtime] 💬 event:new 수신:', payload);
+        handleIncomingMessage(payload);
+      });
+  
+      channel.onError((err) => {
+        console.error('[Realtime] 채널 에러:', err || {});
+        isJoined = false;
+        updateConnectionStatus('error');
+        enableChatInput(false);
+      });
+  
+      channel.onClose(() => {
+        console.log('[Realtime] ℹ️ 채널 종료됨');
+        isJoined = false;
+        enableChatInput(false);
+        updateConnectionStatus('disconnected');
+      });
+    }
+  
+    // -----------------------------
+    // 수신 메시지 처리
+    // -----------------------------
+    function handleIncomingMessage(payload) {
+      if (!payload) return;
+  
+      const messageList = $('realtimeMessageList');
+      if (!messageList) return;
+  
+      const messageEl = createMessageElement(payload);
+      messageList.appendChild(messageEl);
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+  
+    function createMessageElement(payload) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'realtime-message';
+  
+      const authorRole = payload.author_role || 'golfer';
+      const isGolfer = authorRole === 'golfer';
+  
+      if (isGolfer) {
+        messageDiv.classList.add('message-golfer');
+      } else {
+        messageDiv.classList.add('message-coach');
+      }
+  
+      const messageText = document.createElement('div');
+      messageText.className = 'message-text';
+      messageText.textContent = payload.message || '';
+  
+      const messageTime = document.createElement('div');
+      messageTime.className = 'message-time';
+      const ts = (payload.meta && payload.meta.ts) || Date.now();
+      const date = new Date(ts);
+      messageTime.textContent = date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+  
+      messageDiv.appendChild(messageText);
+      messageDiv.appendChild(messageTime);
+  
+      return messageDiv;
+    }
+  
+    // -----------------------------
+    // 메시지 전송
+    // -----------------------------
+    function sendMessage() {
+      const swingId = getSwingId();
+      if (!swingId) {
+        console.warn('[Realtime] swingId가 없어 메시지를 전송할 수 없습니다.');
+        return;
+      }
+  
+      if (!channel) {
+        console.warn('[Realtime] 채널 객체가 없습니다.');
+        return;
+      }
+  
+      if (!isJoined) {
+        console.warn('[Realtime] 채널이 아직 joined 상태가 아닙니다.');
+        return;
+      }
+  
+      const input = $('realtimeMessageInput');
+      if (!input) return;
+  
+      const message = input.value.trim();
+      if (!message) return;
+  
+      messageRef += 1;
+  
+      const payload = {
+        message,
+        meta: { ts: Date.now() },
+        session_id: swingId,
+        author_role: 'golfer',
+        author_id: 'golfer_1',
+        // 서버에서 필요하다면 type 사용 가능
+        type: 'chat_message',
+      };
+  
+      console.log('[Realtime] ➡️ chat:new 전송:', payload);
+  
+      channel
+        .push('chat:new', payload) // 🔥 서버 handle_in("chat:new", ...) 과 맞춤
+        .receive('ok', (resp) => {
+          console.log('[Realtime] ✅ chat:new 응답:', resp);
+          input.value = '';
+        })
+        .receive('error', (err) => {
+          console.error('[Realtime] ❌ chat:new 오류:', err);
+        });
+    }
+  
+    // -----------------------------
+    // UI 보조 함수들
+    // -----------------------------
+    function updateConnectionStatus(status) {
+      const statusEl = $('realtimeStatus');
+      if (!statusEl) return;
+  
+      const statusText = {
         connected: '연결됨',
         joined: '연결됨',
         disconnected: '연결 끊김',
@@ -31,19 +252,20 @@
         timeout: '연결 시간 초과',
       };
   
-      el.textContent = textMap[status] || '연결 중...';
-      el.className = `realtime-status status-${status}`;
+      statusEl.textContent = statusText[status] || '연결 중...';
+      statusEl.className = `realtime-status status-${status}`;
     }
   
     function enableChatInput(enabled) {
       const input = $('realtimeMessageInput');
-      const btn = $('realtimeSendBtn');
+      const sendBtn = $('realtimeSendBtn');
+  
       if (input) {
         input.disabled = !enabled;
         input.placeholder = enabled ? '메시지를 입력하세요...' : '연결 중...';
       }
-      if (btn) {
-        btn.disabled = !enabled;
+      if (sendBtn) {
+        sendBtn.disabled = !enabled;
       }
     }
   
@@ -60,196 +282,26 @@
       }
     }
   
-    // ---------- 메시지 렌더링 ----------
-    function createMessageElement(payload) {
-      const div = document.createElement('div');
-      div.className = 'realtime-message';
-  
-      const role = payload.author_role || 'golfer';
-      const isGolfer = role === 'golfer';
-  
-      if (isGolfer) div.classList.add('message-golfer');
-      else div.classList.add('message-coach');
-  
-      const textEl = document.createElement('div');
-      textEl.className = 'message-text';
-      textEl.textContent = payload.message || '';
-  
-      const timeEl = document.createElement('div');
-      timeEl.className = 'message-time';
-      const ts = (payload.meta && payload.meta.ts) || Date.now();
-      const date = new Date(ts);
-      timeEl.textContent = date.toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-  
-      div.appendChild(textEl);
-      div.appendChild(timeEl);
-      return div;
-    }
-  
-    function handleIncomingMessage(payload) {
-      if (!payload || payload.type !== 'chat_message') return;
-  
-      const list = $('realtimeMessageList');
-      if (!list) return;
-  
-      const el = createMessageElement(payload);
-      list.appendChild(el);
-      list.scrollTop = list.scrollHeight;
-    }
-  
-    // ---------- WebSocket 메시지 파서 ----------
-    function handleFrame(data) {
-      let msg;
-      try {
-        msg = JSON.parse(data);
-      } catch (e) {
-        console.warn('[Realtime] JSON 파싱 실패:', data);
-        return;
-      }
-  
-      if (!Array.isArray(msg) || msg.length < 5) {
-        // Phoenix 프레임이 아님
-        return;
-      }
-  
-      const [joinRef, ref, frameTopic, eventName, payload] = msg;
-  
-      // JOIN 응답
-      if (eventName === 'phx_reply' && frameTopic === topic) {
-        // payload: { status: "ok", response: { ... } }
-        if (payload && payload.status === 'ok') {
-          console.log('[Realtime] ✅ JOIN OK:', payload.response || payload);
-          joined = true;
-          updateConnectionStatus('joined');
-          enableChatInput(true);
-        } else {
-          console.warn('[Realtime] ❌ JOIN ERROR:', payload);
-          joined = false;
-          updateConnectionStatus('error');
-          enableChatInput(false);
-        }
-        return;
-      }
-  
-      // 채널 에러
-      if (eventName === 'phx_error') {
-        console.warn('[Realtime] 채널 에러:', payload);
-        joined = false;
-        updateConnectionStatus('error');
-        enableChatInput(false);
-        return;
-      }
-  
-      // 우리가 원하는 이벤트
-      if (eventName === 'event:new') {
-        console.log('[Realtime] 💬 event:new 수신:', payload);
-        handleIncomingMessage(payload);
-      }
-    }
-  
-    // ---------- WebSocket 연결 ----------
-    function connect() {
-      const swingId = getSwingId();
-      if (!swingId) {
-        console.warn('[Realtime] swingId가 없어 실시간 코칭을 시작할 수 없습니다.');
-        return;
-      }
-  
-      topic = `session:${swingId}`;
-  
-      console.log('[Realtime] WebSocket 연결 시도:', WS_URL);
-      ws = new WebSocket(WS_URL);
-  
-      ws.onopen = () => {
-        console.log('[Realtime] ✅ 소켓 연결 성공');
-        updateConnectionStatus('connected');
-        enableChatInput(false);
-  
-        // JOIN 프레임 전송: [joinRef, ref, topic, "phx_join", payload]
-        const frame = [null, String(joinRef++), topic, 'phx_join', {}];
-        console.log('[Realtime] ➡️ phx_join 전송:', frame);
-        ws.send(JSON.stringify(frame));
-      };
-  
-      ws.onmessage = (event) => {
-        // Phoenix는 연결 유지용 ping도 보내므로 그대로 다 넘겨서 처리
-        handleFrame(event.data);
-      };
-  
-      ws.onerror = (err) => {
-        console.error('[Realtime] ❌ WebSocket 오류:', err);
-        updateConnectionStatus('error');
-        enableChatInput(false);
-      };
-  
-      ws.onclose = () => {
-        console.log('[Realtime] 🔌 WebSocket 연결 종료');
-        joined = false;
-        updateConnectionStatus('disconnected');
-        enableChatInput(false);
-      };
-    }
-  
-    // ---------- 메시지 전송 ----------
-    function sendMessage() {
-      const swingId = getSwingId();
-      if (!swingId) {
-        console.warn('[Realtime] swingId가 없어 메시지를 전송할 수 없습니다.');
-        return;
-      }
-  
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        console.warn('[Realtime] WebSocket이 열려 있지 않습니다.');
-        return;
-      }
-  
-      if (!joined) {
-        console.warn('[Realtime] 아직 채널 join 전입니다. 잠시 후 다시 시도해 주세요.');
-        return;
-      }
-  
-      const input = $('realtimeMessageInput');
-      if (!input) return;
-  
-      const message = input.value.trim();
-      if (!message) return;
-  
-      const payload = {
-        type: 'chat_message',
-        session_id: swingId,
-        author_role: 'golfer',
-        author_id: 'golfer_1',
-        message,
-        meta: { ts: Date.now() },
-      };
-  
-      const frame = [null, String(pushRef++), topic, 'event:new', payload];
-  
-      console.log('[Realtime] ➡️ event:new 전송:', frame);
-      try {
-        ws.send(JSON.stringify(frame));
-        input.value = '';
-      } catch (e) {
-        console.error('[Realtime] ❌ event:new 전송 실패:', e);
-      }
-    }
-  
-    // ---------- 초기화 ----------
+    // -----------------------------
+    // 초기화
+    // -----------------------------
     function init() {
-      // DOM 준비되면 실행
+      if (isRealtimeInitialized) {
+        console.log('[Realtime] ⚠ init()가 이미 실행되어 두 번째 호출을 무시합니다.');
+        return;
+      }
+      isRealtimeInitialized = true;
+  
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => {
-            connect();
+            initRealtimeCoaching();
             setupMobilePanelToggle();
           }, 500);
         });
       } else {
         setTimeout(() => {
-          connect();
+          initRealtimeCoaching();
           setupMobilePanelToggle();
         }, 500);
       }
@@ -272,7 +324,10 @@
       window.addEventListener('resize', setupMobilePanelToggle);
     }
   
-    // 시작
+    // 필요하면 외부에서 다시 호출 가능
+    window.initRealtimeCoaching = initRealtimeCoaching;
+  
+    // 자동 초기화
     init();
   })();
   
