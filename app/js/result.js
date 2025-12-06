@@ -133,44 +133,36 @@
     // 수신 메시지 처리
     // =========================
     function handleIncomingMessage(payload) {
-      const messageList = $('realtimeMessageList');
-      if (!messageList) return;
-  
-      const messageEl = createMessageElement(payload);
-      messageList.appendChild(messageEl);
-      messageList.scrollTop = messageList.scrollHeight;
+      // chat_message 타입만 표시
+      if (payload.type !== 'chat_message') {
+        return;
+      }
+      // renderMessage 함수 사용 (지시서 요구사항)
+      renderMessage(payload);
     }
   
-    function createMessageElement(payload) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'realtime-message';
-  
-      const authorRole = payload.author_role || 'golfer';
-      const isGolfer = authorRole === 'golfer';
-  
-      if (isGolfer) {
-        messageDiv.classList.add('message-golfer');
-      } else {
-        messageDiv.classList.add('message-coach');
-      }
-  
-      const messageText = document.createElement('div');
-      messageText.className = 'message-text';
-      messageText.textContent = payload.message || '';
-  
-      const messageTime = document.createElement('div');
-      messageTime.className = 'message-time';
-      const ts = (payload.meta && payload.meta.ts) || Date.now();
-      const date = new Date(ts);
-      messageTime.textContent = date.toLocaleTimeString('ko-KR', {
+    // 메시지 렌더링 함수 (지시서 요구사항 반영)
+    function renderMessage(payload) {
+      const { author_role, message, meta } = payload;
+      const role = author_role || 'golfer';
+      
+      const time = new Date(meta?.ts || Date.now()).toLocaleTimeString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
       });
-  
-      messageDiv.appendChild(messageText);
-      messageDiv.appendChild(messageTime);
-  
-      return messageDiv;
+
+      const div = document.createElement('div');
+      div.className = `chat-message ${role}`;
+      div.innerHTML = `
+        <div class="bubble">${message || ''}</div>
+        <div class="meta">${time}</div>
+      `;
+
+      const messageList = $('realtimeMessageList');
+      if (messageList) {
+        messageList.appendChild(div);
+        messageList.scrollTop = messageList.scrollHeight;
+      }
     }
   
     // =========================
