@@ -1,4 +1,4 @@
-// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (수정 안정 버전)
+// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (Phoenix 정식 버전)
 (function () {
     'use strict';
   
@@ -37,7 +37,8 @@
         return;
       }
   
-      const socketUrl = 'wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0';
+      // ✅ Phoenix.Socket 는 여기까지만 주면 내부에서 /websocket?vsn=... 를 붙입니다.
+      const socketUrl = 'wss://realtime.inswing.ai/socket';
       console.log('[Realtime] WebSocket 연결 시도:', socketUrl);
   
       socket = new Phoenix.Socket(socketUrl, {
@@ -114,12 +115,12 @@
         });
   
       // 서버가 브로드캐스트하는 메시지 수신
-      // (테스트 스크립트 기준: chat:added, 필요시 event:new 도 함께 처리)
       channel.on('chat:added', (payload) => {
         console.log('[Realtime] 💬 chat:added 수신:', payload);
         handleIncomingMessage(payload);
       });
   
+      // 혹시 서버에서 event:new 도 쓸 수 있으니 같이 수신
       channel.on('event:new', (payload) => {
         console.log('[Realtime] 💬 event:new 수신:', payload);
         handleIncomingMessage(payload);
@@ -220,14 +221,13 @@
         session_id: swingId,
         author_role: 'golfer',
         author_id: 'golfer_1',
-        // 서버에서 필요하다면 type 사용 가능
         type: 'chat_message',
       };
   
       console.log('[Realtime] ➡️ chat:new 전송:', payload);
   
       channel
-        .push('chat:new', payload) // 🔥 서버 handle_in("chat:new", ...) 과 맞춤
+        .push('chat:new', payload) // 서버 handle_in("chat:new", ...) 과 매칭
         .receive('ok', (resp) => {
           console.log('[Realtime] ✅ chat:new 응답:', resp);
           input.value = '';
@@ -324,7 +324,6 @@
       window.addEventListener('resize', setupMobilePanelToggle);
     }
   
-    // 필요하면 외부에서 다시 호출 가능
     window.initRealtimeCoaching = initRealtimeCoaching;
   
     // 자동 초기화
