@@ -99,6 +99,16 @@
           isJoined = true;
           updateConnectionStatus('joined');
           setTimeout(() => enableChatInput(true), 100);
+          
+          // 기존 메시지가 있으면 렌더링
+          if (resp.messages && Array.isArray(resp.messages)) {
+            console.log('[Realtime] 기존 메시지 로드:', resp.messages.length, '개');
+            resp.messages.forEach(msg => {
+              if (msg.type === 'chat_message') {
+                renderMessage(msg);
+              }
+            });
+          }
         })
         .receive('error', (err) => {
           console.error('[Realtime] ❌ JOIN ERROR:', err, 'state:', channel.state);
@@ -118,6 +128,21 @@
         console.log('[Realtime] 💬 event:new 수신:', payload);
         handleIncomingMessage(payload);
       });
+
+      // typing 이벤트 수신
+      channel.on('typing', (payload) => {
+        const { author_role } = payload;
+        if (author_role !== 'golfer') { // 자신의 타이핑은 표시하지 않음
+          showTypingIndicator(author_role);
+          // 3초 후 자동으로 숨김
+          setTimeout(hideTypingIndicator, 3000);
+        }
+      });
+
+      // typing_stop 이벤트 수신
+      channel.on('typing_stop', () => {
+        hideTypingIndicator();
+      });
   
       // 굳이 onError로 state를 건드리지 않습니다.
       // 채널이 완전히 끊어지면 onClose / socket.onClose에서 다시 처리.
@@ -133,32 +158,59 @@
     // 수신 메시지 처리
     // =========================
     function handleIncomingMessage(payload) {
-      // chat_message 타입만 표시
-      if (payload.type !== 'chat_message') {
+      // chat_message, image, audio 타입 메시지 표시
+      const allowedTypes = ['chat_message', 'image', 'audio'];
+      if (!allowedTypes.includes(payload.type)) {
         return;
       }
       // renderMessage 함수 사용 (지시서 요구사항)
       renderMessage(payload);
     }
   
-    // 메시지 렌더링 함수 (지시서 요구사항 반영)
+    // 프로필 아이콘 텍스트 생성
+    function getProfileIconText(role, authorId) {
+      if (role === 'golfer') {
+        return '나';
+      } else if (role === 'coach') {
+        return '코치';
+      }
+      return '?';
+    }
+
+    // 메시지 렌더링 함수 (카카오톡 스타일 + 프로필 아이콘 + 미디어 지원)
     function renderMessage(payload) {
-      const { author_role, message, meta } = payload;
+      const { author_role, message, meta, author_id, type, media_url, media_type } = payload;
       // author_role이 'golfer'가 아니면 'coach'로 처리
       const role = (author_role === 'golfer') ? 'golfer' : 'coach';
-      
-      console.log('[Realtime] renderMessage - author_role:', author_role, '→ role:', role);
+      const msgType = type || 'chat_message';
       
       const time = new Date(meta?.ts || Date.now()).toLocaleTimeString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
       });
 
+      const profileIconText = getProfileIconText(role, author_id);
+
       const div = document.createElement('div');
       div.className = `chat-message ${role}`;
+      
+      // 미디어 메시지 처리
+      let contentHtml = '';
+      if (msgType === 'image' && media_url) {
+        contentHtml = `<img src="${media_url}" alt="이미지" class="media-content" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open('${media_url}', '_blank')">`;
+      } else if (msgType === 'audio' && media_url) {
+        contentHtml = `<audio controls class="media-content" style="max-width: 250px;"><source src="${media_url}" type="${media_type || 'audio/mpeg'}"></audio>`;
+      } else {
+        // 일반 텍스트 메시지
+        contentHtml = `<div class="bubble">${message || ''}</div>`;
+      }
+
       div.innerHTML = `
-        <div class="bubble">${message || ''}</div>
-        <div class="meta">${time}</div>
+        <div class="profile-icon">${profileIconText}</div>
+        <div style="display: flex; flex-direction: column;">
+          ${contentHtml}
+          <div class="meta">${time}</div>
+        </div>
       `;
 
       const messageList = $('realtimeMessageList');
@@ -166,6 +218,36 @@
         messageList.appendChild(div);
         messageList.scrollTop = messageList.scrollHeight;
       }
+    }
+
+    // 타이핑 인디케이터 표시/숨김
+    function showTypingIndicator(role) {
+      const messageList = $('realtimeMessageList');
+      if (!messageList) return;
+
+      // 기존 타이핑 인디케이터 제거
+      const existing = messageList.querySelector('.typing-indicator');
+      if (existing) existing.remove();
+
+      const indicator = document.createElement('div');
+      indicator.className = 'typing-indicator';
+      indicator.innerHTML = `
+        <span>${role === 'coach' ? '코치' : '골퍼'}가 입력 중입니다</span>
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      `;
+      messageList.appendChild(indicator);
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      const messageList = $('realtimeMessageList');
+      if (!messageList) return;
+      const indicator = messageList.querySelector('.typing-indicator');
+      if (indicator) indicator.remove();
     }
   
     // =========================
@@ -238,6 +320,46 @@
       statusEl.className = `realtime-status status-${status}`;
     }
   
+    // typing 이벤트 관리
+    let typingTimeout = null;
+    let lastTypingTime = 0;
+    
+    function handleTyping() {
+      if (!channel || !isJoined) return;
+      
+      const now = Date.now();
+      // 1초마다 한 번만 typing 이벤트 전송
+      if (now - lastTypingTime < 1000) return;
+      lastTypingTime = now;
+      
+      channel.push('typing', {
+        author_role: 'golfer',
+        session_id: getSwingId()
+      });
+      
+      // 3초 후 자동으로 typing_stop 전송
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        if (channel && isJoined) {
+          channel.push('typing_stop', {
+            author_role: 'golfer'
+          });
+        }
+      }, 3000);
+    }
+    
+    function handleTypingStop(e) {
+      // Enter 키를 누르면 typing_stop 전송
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (typingTimeout) clearTimeout(typingTimeout);
+        if (channel && isJoined) {
+          channel.push('typing_stop', {
+            author_role: 'golfer'
+          });
+        }
+      }
+    }
+
     function enableChatInput(enabled) {
       const input = $('realtimeMessageInput');
       const sendBtn = $('realtimeSendBtn');
@@ -245,6 +367,15 @@
       if (input) {
         input.disabled = !enabled;
         input.placeholder = enabled ? '메시지를 입력하세요...' : '연결 중...';
+        
+        // typing 이벤트 리스너 등록/제거
+        input.removeEventListener('input', handleTyping);
+        input.removeEventListener('keydown', handleTypingStop);
+        
+        if (enabled) {
+          input.addEventListener('input', handleTyping);
+          input.addEventListener('keydown', handleTypingStop);
+        }
       }
       if (sendBtn) {
         sendBtn.disabled = !enabled;

@@ -1,54 +1,162 @@
-/* INSWING 채팅 UI 스타일 */
+/* INSWING 채팅 UI 스타일 - 카카오톡 스타일 */
+
+.realtime-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .realtime-message-list .chat-message {
-  display: flex !important;
-  flex-direction: column !important;
-  max-width: 70%;
-  margin: 6px 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 75%;
+  margin: 4px 0;
 }
 
 .realtime-message-list .chat-message.golfer {
-  align-self: flex-end !important;
-  text-align: right;
-  margin-left: auto;
-  margin-right: 0;
+  align-self: flex-end;
+  flex-direction: row-reverse;
 }
 
 .realtime-message-list .chat-message.coach {
-  align-self: flex-start !important;
-  text-align: left;
-  margin-left: 0;
-  margin-right: auto;
+  align-self: flex-start;
+  flex-direction: row;
 }
 
+/* 프로필 아이콘 */
+.chat-message .profile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.chat-message.golfer .profile-icon {
+  background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+}
+
+.chat-message.coach .profile-icon {
+  background: linear-gradient(135deg, #64748b, #475569);
+}
+
+/* 말풍선 */
 .realtime-message-list .bubble {
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 18px;
   font-size: 15px;
   line-height: 1.4;
   word-wrap: break-word;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .realtime-message-list .chat-message.golfer .bubble {
-  background: #D1E8FF;
+  background: #FEE500;
   color: #1e293b;
+  border-bottom-right-radius: 4px;
 }
 
 .realtime-message-list .chat-message.coach .bubble {
-  background: #F1F1F1;
+  background: #FFFFFF;
   color: #1e293b;
+  border-bottom-left-radius: 4px;
 }
 
+/* 메타 정보 (시간) */
 .realtime-message-list .meta {
   font-size: 11px;
-  margin-top: 3px;
-  opacity: 0.6;
+  color: #94a3b8;
+  margin-top: 2px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.chat-message.golfer .meta {
+  text-align: right;
+}
+
+.chat-message.coach .meta {
+  text-align: left;
+}
+
+/* 타이핑 인디케이터 */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.typing-indicator .dots {
+  display: flex;
+  gap: 3px;
+}
+
+.typing-indicator .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* 미디어 콘텐츠 스타일 */
+.realtime-message-list .media-content {
+  margin: 4px 0;
+  display: block;
+}
+
+.realtime-message-list .chat-message.golfer .media-content {
+  margin-left: auto;
+}
+
+.realtime-message-list .chat-message.coach .media-content {
+  margin-right: auto;
 }
 
 /* 모바일 대응 */
 @media (max-width: 600px) {
   .realtime-message-list .chat-message {
     max-width: 85%;
+  }
+  
+  .chat-message .profile-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .realtime-message-list .media-content {
+    max-width: 150px !important;
   }
 }
 
