@@ -1,4 +1,4 @@
-// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (테스트 페이지와 이벤트 이름 맞춘 버전)
+// INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능 (event:new 안정 버전)
 (function () {
     'use strict';
   
@@ -6,7 +6,7 @@
     let channel = null;
     let isJoined = false;
     let messageRef = 0;
-    let isRealtimeInitialized = false; // 중복 init 방지
+    let initialized = false; // 🔥 중복 init 방지
   
     const $ = (id) => document.getElementById(id);
   
@@ -30,7 +30,7 @@
         return;
       }
   
-      // 이미 열린 소켓이 있으면 재사용
+      // 이미 연결되어 있으면 재사용
       if (socket && socket.connectionState() === 'open') {
         console.log('[Realtime] 기존 소켓 재사용, 채널만 join');
         joinChannel(swingId);
@@ -68,7 +68,7 @@
     }
   
     // =========================
-    // 채널 join
+    // 채널 join (event:new 프로토콜 기준)
     // =========================
     function joinChannel(swingId) {
       if (!socket || socket.connectionState() !== 'open') {
@@ -76,7 +76,7 @@
         return;
       }
   
-      // 이전 채널 정리
+      // 이전 채널 정리 (중복 메시지 방지의 핵심)
       if (channel) {
         try {
           channel.leave();
@@ -90,8 +90,7 @@
       const topic = `session:${swingId}`;
       console.log('[Realtime] 채널 join 시도:', topic);
   
-      // 🔥 테스트 페이지 패턴과 맞춤: session_id 파라미터 포함
-      channel = socket.channel(topic, { session_id: swingId });
+      channel = socket.channel(topic, {}); // 🔥 가장 처음에 잘 동작하던 형태
   
       channel
         .join()
@@ -114,25 +113,19 @@
           enableChatInput(false);
         });
   
-      // 채널 레벨 에러 (서버에서 강제 종료 등)
-      channel.onError((err) => {
-        console.error('[Realtime] 채널 에러(onError):', err, 'state:', channel.state);
-        isJoined = false;
-        updateConnectionStatus('error');
-        enableChatInput(false);
+      // 🔥 서버에서 브로드캐스트하는 event:new 수신
+      channel.on('event:new', (payload) => {
+        console.log('[Realtime] 💬 event:new 수신:', payload);
+        handleIncomingMessage(payload);
       });
   
+      // 굳이 onError로 state를 건드리지 않습니다.
+      // 채널이 완전히 끊어지면 onClose / socket.onClose에서 다시 처리.
       channel.onClose(() => {
         console.log('[Realtime] ℹ️ 채널 종료됨');
         isJoined = false;
         enableChatInput(false);
         updateConnectionStatus('disconnected');
-      });
-  
-      // 🔥 서버가 브로드캐스트하는 이벤트 이름: chat:added
-      channel.on('chat:added', (payload) => {
-        console.log('[Realtime] 💬 chat:added 수신:', payload);
-        handleIncomingMessage(payload);
       });
     }
   
@@ -140,7 +133,6 @@
     // 수신 메시지 처리
     // =========================
     function handleIncomingMessage(payload) {
-      // 타입 체크는 선택사항, 우선 메시지 있으면 다 표시
       const messageList = $('realtimeMessageList');
       if (!messageList) return;
   
@@ -182,7 +174,7 @@
     }
   
     // =========================
-    // 메시지 전송
+    // 메시지 전송 (event:new)
     // =========================
     function sendMessage() {
       const swingId = getSwingId();
@@ -196,11 +188,9 @@
         return;
       }
   
-      if (!isJoined || channel.state !== 'joined') {
-        console.warn('[Realtime] 채널이 joined 상태가 아닙니다.', {
-          isJoined,
-          state: channel.state,
-        });
+      // 🔥 channel.state 체크는 빼고, 우리가 관리하는 isJoined만 사용
+      if (!isJoined) {
+        console.warn('[Realtime] 채널이 아직 joined 상태가 아닙니다. isJoined=false');
         return;
       }
   
@@ -221,17 +211,16 @@
         meta: { ts: Date.now() },
       };
   
-      console.log('[Realtime] ➡️ chat:new 전송:', payload);
+      console.log('[Realtime] ➡️ event:new 전송:', payload);
   
-      // 🔥 테스트 페이지와 동일: chat:new
       channel
-        .push('chat:new', payload)
+        .push('event:new', payload)
         .receive('ok', (resp) => {
-          console.log('[Realtime] ✅ chat:new 응답:', resp);
+          console.log('[Realtime] ✅ event:new 응답:', resp);
           input.value = '';
         })
         .receive('error', (err) => {
-          console.error('[Realtime] ❌ chat:new 오류:', err);
+          console.error('[Realtime] ❌ event:new 오류:', err);
         });
     }
   
@@ -284,11 +273,11 @@
     // 초기화
     // =========================
     function init() {
-      if (isRealtimeInitialized) {
+      if (initialized) {
         console.log('[Realtime] ⚠ init()가 이미 실행되어 두 번째 호출을 무시합니다.');
         return;
       }
-      isRealtimeInitialized = true;
+      initialized = true;
   
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -322,10 +311,8 @@
       window.addEventListener('resize', setupMobilePanelToggle);
     }
   
-    // 필요시 외부에서 호출할 수 있게 노출
     window.initRealtimeCoaching = initRealtimeCoaching;
   
-    // 자동 초기화
     init();
   })();
   
