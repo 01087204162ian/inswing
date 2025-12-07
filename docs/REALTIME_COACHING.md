@@ -1,33 +1,206 @@
 # REALTIME_COACHING
 
-> **목적**: 실시간 코칭 시스템 & WebSocket/Phoenix 이벤트 규격 문서화
+> **목적**: INSWING 실시간 코칭 시스템의 구조, WebSocket/Phoenix 이벤트 규격, 클라이언트·서버 동작 흐름 및 확장 기준을 문서화한다.
 
-> **최종 업데이트**: 2025년 1월
+> **최종 업데이트**: 2025-01
 
 ---
 
 ## 📋 목차
 
 1. [개요](#개요)
-2. [상세 내용](#상세-내용)
-3. [상태 / TODO](#상태--todo)
-4. [변경 이력](#변경-이력)
+2. [실시간 시스템 구조](#실시간-시스템-구조)
+3. [이벤트 규격](#이벤트-규격)
+4. [클라이언트 동작](#클라이언트-동작)
+5. [서버 동작](#서버-동작-phoenix)
+6. [AI 이벤트 연계](#ai-이벤트-연계)
+7. [데이터베이스 구조](#데이터베이스-구조)
+8. [향후 확장 계획](#향후-확장-계획)
+9. [변경 이력](#변경-이력)
 
 ---
 
 ## 1. 개요
 
----
+INSWING 실시간 코칭은 골퍼, 코치, AI가 한 세션을 기준으로 실시간 메시지 기반의 피드백을 주고받는 시스템이다.
 
-## 2. 상세 내용
+### 특징
 
----
-
-## 3. 상태 / TODO
-
----
-
-## 4. 변경 이력
+- 비디오 업로드 후 결과를 기다리는 정적 서비스가 아님
+- 코칭 역시 대화형·즉시성·상호작용 기반으로 설계
+- 모바일/데스크톱 모두 동일한 경험 제공
 
 ---
 
+## 2. 실시간 시스템 구조
+
+```
+프론트엔드 (WebSocket Client)
+        ↕
+Phoenix WebSocket (inswing-realtime)
+        ↕
+MySQL (chat_messages)
+```
+
+### 실시간 이벤트 생성 흐름
+
+1. 사용자 행동 / AI 이벤트 / API 처리
+2. inswing-realtime 서버로 HTTP 이벤트 전달
+3. Phoenix가 `session:{session_id}` 채널로 브로드캐스트
+4. 클라이언트 UI 업데이트
+
+---
+
+## 3. 이벤트 규격
+
+### 기본 payload 공통 필드
+
+| 필드 | 설명 |
+|------|------|
+| `type` | 이벤트 종류 |
+| `session_id` | 세션 ID |
+| `author_role` | golfer / coach / ai |
+| `author_id` | user ID |
+| `message` | 핵심 내용 |
+| `meta` | 부가 데이터 (timestamp, swing_id 등) |
+
+### 전체 이벤트 타입 표
+
+| type | 설명 |
+|------|------|
+| `chat_message` | 텍스트 기반 실시간 메시지 |
+| `swing_created` | 새 스윙 업로드 이벤트 |
+| `swing_analyzed` | AI 분석 완료 |
+| `ai_insight` | Claude AI가 생성한 코칭/멘탈 메시지 |
+| `coach_tip` | 코치의 기술 코멘트 |
+| `feeling_update` | 골퍼가 느낌 기록 |
+| `focus_point` | 특정 프레임 강조 |
+| `system_notice` | 시스템 알림 |
+
+### Phoenix 메시지 예시
+
+```json
+{
+  "topic": "session:sess_123",
+  "event": "event:new",
+  "payload": {
+    "type": "chat_message",
+    "session_id": "sess_123",
+    "author_role": "golfer",
+    "author_id": "user_12",
+    "message": "이번에는 탄도가 너무 높습니다.",
+    "meta": {
+      "swing_id": "sw_222",
+      "ts": 1765032112000
+    }
+  }
+}
+```
+
+---
+
+## 4. 클라이언트 동작
+
+### WebSocket 연결
+
+```
+wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0
+```
+
+### 채널 join
+
+```
+session:{session_id}
+```
+
+### UI 규칙
+
+| 상황 | UI 행동 |
+|------|---------|
+| 본인 메시지 | 우측 말풍선 |
+| 다른 사람 메시지 | 좌측 말풍선 |
+| AI 메시지 | 별도 스타일, Insight 배지 |
+| 시스템 메시지 | 중앙 정렬, 회색 |
+
+---
+
+## 5. 서버 동작 (Phoenix)
+
+### 핵심 채널
+
+- `InswingRealtimeWeb.SessionChannel`
+
+### 로직 흐름
+
+```
+handle_in("event:new", payload)
+  → DB 저장 (chat_messages)
+  → broadcast! to session:{session_id}
+  → reply {:ok, status:"sent"}
+```
+
+### 데이터 접근
+
+- `InswingRealtime.Chat.list_messages(session_id)`
+- `InswingRealtime.Chat.create_message(attrs)`
+
+---
+
+## 6. AI 이벤트 연계
+
+분석 완료 또는 조건 충족 시 API가 호출하고 Phoenix가 브로드캐스트:
+
+**스윙 분석 완료 → API → Realtime 서버 → event:new**
+
+### AI 코칭 예시 payload
+
+```json
+{
+  "type": "ai_insight",
+  "persona": "calm_mentor",
+  "message": "백스윙 톱에서 오른쪽 어깨가 과하게 들리는 경향이 있어요."
+}
+```
+
+---
+
+## 7. 데이터베이스 구조
+
+| 컬럼 | 데이터 | 설명 |
+|------|--------|------|
+| `session_id` | string | 세션 ID |
+| `type` | string | 이벤트 타입 |
+| `author_role` | string | golfer / coach / ai |
+| `author_id` | string | 사용자 ID |
+| `message` | text | 메시지 |
+| `meta` | map | ts, swing_id 등 |
+| `inserted_at` | timestamp | 생성일 |
+| `updated_at` | timestamp | 수정일 |
+
+### 검색 기준
+
+- `ORDER BY inserted_at ASC`
+
+---
+
+## 8. 향후 확장 계획
+
+| 기능 | 우선순위 |
+|------|----------|
+| 타이핑 인디케이터 | ⭐ |
+| 메시지 삭제 & 수정 | ⭐ |
+| 파일/이미지 메시지 | ⭐ |
+| 다중 코치 참여 | ⭐ |
+| 세션 녹화 & 리플레이 | ◻ |
+| 음성 메시지 & 음성 → 텍스트 | ◻ |
+| 원격 스윙 카메라 연결 | 연구 단계 |
+
+---
+
+## 9. 변경 이력
+
+| 날짜 | 내용 | 작성자 |
+|------|------|--------|
+| 2025-01 | 초기 문서 생성 | Brown |
+
+---
