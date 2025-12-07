@@ -100,13 +100,11 @@
           updateConnectionStatus('joined');
           setTimeout(() => enableChatInput(true), 100);
           
-          // 기존 메시지가 있으면 렌더링
+          // 기존 메시지가 있으면 렌더링 (문서 요구사항: 모든 타입 표시)
           if (resp.messages && Array.isArray(resp.messages)) {
             console.log('[Realtime] 기존 메시지 로드:', resp.messages.length, '개');
             resp.messages.forEach(msg => {
-              if (msg.type === 'chat_message') {
-                renderMessage(msg);
-              }
+              handleIncomingMessage(msg);
             });
           }
         })
@@ -127,6 +125,18 @@
       channel.on('event:new', (payload) => {
         console.log('[Realtime] 💬 event:new 수신:', payload);
         handleIncomingMessage(payload);
+      });
+
+      // presence:state 이벤트 수신
+      channel.on('presence:state', (presence) => {
+        console.log('[Realtime] 👥 presence:state 수신:', presence);
+        // 향후 UI에 접속자 목록 표시 가능
+      });
+
+      // presence:diff 이벤트 수신
+      channel.on('presence:diff', (diff) => {
+        console.log('[Realtime] 👥 presence:diff 수신:', diff);
+        // 향후 UI에 접속자 변화 표시 가능
       });
 
       // typing 이벤트 수신
@@ -173,6 +183,10 @@
         return '나';
       } else if (role === 'coach') {
         return '코치';
+      } else if (role === 'ai') {
+        return 'AI';
+      } else if (role === 'system') {
+        return '';
       }
       return '?';
     }
@@ -180,9 +194,17 @@
     // 메시지 렌더링 함수 (카카오톡 스타일 + 프로필 아이콘 + 미디어 지원)
     function renderMessage(payload) {
       const { author_role, message, meta, author_id, type, media_url, media_type } = payload;
-      // author_role이 'golfer'가 아니면 'coach'로 처리
-      const role = (author_role === 'golfer') ? 'golfer' : 'coach';
       const msgType = type || 'chat_message';
+      
+      // 문서 요구사항: AI 메시지와 시스템 메시지 처리
+      let role = 'coach';
+      if (author_role === 'golfer') {
+        role = 'golfer';
+      } else if (author_role === 'ai') {
+        role = 'ai';
+      } else if (msgType === 'system_notice') {
+        role = 'system';
+      }
       
       const time = new Date(meta?.ts || Date.now()).toLocaleTimeString('ko-KR', {
         hour: '2-digit',
@@ -194,24 +216,41 @@
       const div = document.createElement('div');
       div.className = `chat-message ${role}`;
       
-      // 미디어 메시지 처리
-      let contentHtml = '';
-      if (msgType === 'image' && media_url) {
-        contentHtml = `<img src="${media_url}" alt="이미지" class="media-content" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open('${media_url}', '_blank')">`;
-      } else if (msgType === 'audio' && media_url) {
-        contentHtml = `<audio controls class="media-content" style="max-width: 250px;"><source src="${media_url}" type="${media_type || 'audio/mpeg'}"></audio>`;
+      // 시스템 메시지는 중앙 정렬, 회색 스타일
+      if (role === 'system') {
+        div.style.textAlign = 'center';
+        div.style.color = '#94a3b8';
+        div.style.fontSize = '0.875rem';
+        div.style.margin = '0.5rem 0';
+        div.innerHTML = `<div class="system-notice">${message || ''}</div>`;
       } else {
-        // 일반 텍스트 메시지
-        contentHtml = `<div class="bubble">${message || ''}</div>`;
-      }
+        // 미디어 메시지 처리
+        let contentHtml = '';
+        if (msgType === 'image' && media_url) {
+          contentHtml = `<img src="${media_url}" alt="이미지" class="media-content" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open('${media_url}', '_blank')">`;
+        } else if (msgType === 'audio' && media_url) {
+          contentHtml = `<audio controls class="media-content" style="max-width: 250px;"><source src="${media_url}" type="${media_type || 'audio/mpeg'}"></audio>`;
+        } else {
+          // AI 메시지는 별도 스타일, Insight 배지
+          if (role === 'ai') {
+            contentHtml = `<div class="bubble ai-insight">
+              <span class="insight-badge">💡 Insight</span>
+              <div class="ai-message">${message || ''}</div>
+            </div>`;
+          } else {
+            // 일반 텍스트 메시지
+            contentHtml = `<div class="bubble">${message || ''}</div>`;
+          }
+        }
 
-      div.innerHTML = `
-        <div class="profile-icon">${profileIconText}</div>
-        <div style="display: flex; flex-direction: column;">
-          ${contentHtml}
-          <div class="meta">${time}</div>
-        </div>
-      `;
+        div.innerHTML = `
+          <div class="profile-icon">${profileIconText}</div>
+          <div style="display: flex; flex-direction: column;">
+            ${contentHtml}
+            <div class="meta">${time}</div>
+          </div>
+        `;
+      }
 
       const messageList = $('realtimeMessageList');
       if (messageList) {
