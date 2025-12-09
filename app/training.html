@@ -384,6 +384,15 @@
         // 로그인 체크
         requireLogin();
 
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        const swingId = getQueryParam('id');
+        console.log('[Training] swingId:', swingId);
+        // 나중에 swingId로 /v1/swings/{id} 불러와서 training 포인트/루틴을 채울 예정
+
         // (향후) training.js로 분리 예정
     </script>
 </body>

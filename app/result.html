@@ -1102,6 +1102,7 @@
 
                 <div class="actions">
                     <a href="/app/upload.html" class="btn btn-primary">새 스윙 업로드</a>
+                    <a id="openTrainingBtn" href="#" class="btn btn-secondary">이 스윙으로 트레이닝 열기</a>
                     <a href="/app/history.html" class="btn btn-secondary">히스토리 보기</a>
                 </div>
             </div>
@@ -1165,6 +1166,11 @@
         if (!swingId) {
             alert('스윙 ID가 없습니다.');
             window.location.href = '/app/history.html';
+        }
+
+        const trainingBtn = document.getElementById('openTrainingBtn');
+        if (trainingBtn && swingId) {
+            trainingBtn.href = `/app/training.html?id=${encodeURIComponent(swingId)}`;
         }
 
         const clubNames = {
