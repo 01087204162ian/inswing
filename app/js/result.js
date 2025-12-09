@@ -420,11 +420,38 @@
       const data = await resp.json();
       console.log('[Question] 응답 데이터:', data);
 
-      const answer =
-        data.answer ||
-        data.coaching ||
-        data.message ||
-        '답변은 생성되었으나 형식을 알 수 없습니다. 서버 로그를 확인해 주세요.';
+      // 응답 구조에 따라 답변 포맷팅
+      let answer = '';
+      
+      if (data.answer && typeof data.answer === 'object') {
+        // 구조화된 답변 (cause_text, solution_text 등)
+        const parts = [];
+        if (data.answer.cause_text) {
+          parts.push(`🔍 원인: ${data.answer.cause_text}`);
+        }
+        if (data.answer.solution_text) {
+          parts.push(`💡 해결책: ${data.answer.solution_text}`);
+        }
+        if (data.answer.feel_image) {
+          parts.push(`🎯 느낌: ${data.answer.feel_image}`);
+        }
+        if (data.answer.drill_text) {
+          parts.push(`🏌️ 연습법: ${data.answer.drill_text}`);
+        }
+        if (data.answer.encouragement) {
+          parts.push(`✨ 격려: ${data.answer.encouragement}`);
+        }
+        answer = parts.join('\n\n');
+      } else if (data.answer && typeof data.answer === 'string') {
+        // 문자열 답변
+        answer = data.answer;
+      } else if (data.coaching) {
+        answer = data.coaching;
+      } else if (data.message) {
+        answer = data.message;
+      } else {
+        answer = '답변은 생성되었으나 형식을 알 수 없습니다. 서버 로그를 확인해 주세요.';
+      }
 
       questionAnswerBox.textContent = answer;
       questionAnswerBox.style.opacity = '1';
