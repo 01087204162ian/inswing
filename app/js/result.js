@@ -30,9 +30,20 @@
         console.warn('[Realtime] Phoenix Socket 라이브러리가 로드되지 않았습니다.');
         return;
       }
+
+      // 이미 초기화 중이거나 join 중이면 중복 호출 방지
+      if (isJoining || (channel && (channel.state === 'joining' || channel.state === 'joined'))) {
+        console.warn('[Realtime] 이미 초기화 중이거나 join 중입니다. 중복 호출 방지.');
+        return;
+      }
   
       // 이미 연결되어 있으면 재사용
       if (socket && socket.connectionState() === 'open') {
+        // 채널이 이미 joined 상태면 재사용
+        if (channel && channel.state === 'joined') {
+          console.log('[Realtime] 기존 채널 재사용');
+          return;
+        }
         console.log('[Realtime] 기존 소켓 재사용, 채널만 join');
         joinChannel(swingId);
         return;
@@ -91,6 +102,12 @@
       // 이전 채널 정리 (중복 메시지 방지의 핵심)
       if (channel) {
         try {
+          // 이벤트 리스너 제거
+          channel.off('event:new');
+          channel.off('presence:state');
+          channel.off('presence:diff');
+          channel.off('typing');
+          channel.off('typing_stop');
           channel.leave();
         } catch (e) {
           console.warn('[Realtime] 이전 채널 leave 중 오류:', e);
@@ -108,6 +125,9 @@
       channel = socket.channel(topic, {
         rejoinAfterMs: () => false // 자동 재연결 비활성화
       });
+
+      // 이벤트 리스너 등록 (한 번만)
+      setupChannelListeners(channel);
   
       channel
         .join()
@@ -140,27 +160,32 @@
           updateConnectionStatus('timeout');
           enableChatInput(false);
         });
+    }
   
+    // =========================
+    // 채널 이벤트 리스너 설정
+    // =========================
+    function setupChannelListeners(ch) {
       // 🔥 서버에서 브로드캐스트하는 event:new 수신
-      channel.on('event:new', (payload) => {
+      ch.on('event:new', (payload) => {
         console.log('[Realtime] 💬 event:new 수신:', payload);
         handleIncomingMessage(payload);
       });
 
       // presence:state 이벤트 수신
-      channel.on('presence:state', (presence) => {
+      ch.on('presence:state', (presence) => {
         console.log('[Realtime] 👥 presence:state 수신:', presence);
         // 향후 UI에 접속자 목록 표시 가능
       });
 
       // presence:diff 이벤트 수신
-      channel.on('presence:diff', (diff) => {
+      ch.on('presence:diff', (diff) => {
         console.log('[Realtime] 👥 presence:diff 수신:', diff);
         // 향후 UI에 접속자 변화 표시 가능
       });
 
       // typing 이벤트 수신
-      channel.on('typing', (payload) => {
+      ch.on('typing', (payload) => {
         const { author_role } = payload;
         if (author_role !== 'golfer') { // 자신의 타이핑은 표시하지 않음
           showTypingIndicator(author_role);
@@ -170,13 +195,20 @@
       });
 
       // typing_stop 이벤트 수신
-      channel.on('typing_stop', () => {
+      ch.on('typing_stop', () => {
         hideTypingIndicator();
       });
-  
-      // 굳이 onError로 state를 건드리지 않습니다.
-      // 채널이 완전히 끊어지면 onClose / socket.onClose에서 다시 처리.
-      channel.onClose(() => {
+
+      // 채널 에러 상태 감지
+      ch.onError((reason) => {
+        console.error('[Realtime] ⚠️ 채널 에러:', reason);
+        isJoined = false;
+        enableChatInput(false);
+        updateConnectionStatus('error');
+      });
+
+      // 채널 종료 처리
+      ch.onClose(() => {
         console.log('[Realtime] ℹ️ 채널 종료됨');
         isJoining = false;
         isJoined = false;
@@ -184,7 +216,7 @@
         updateConnectionStatus('disconnected');
       });
     }
-  
+
     // =========================
     // 수신 메시지 처리
     // =========================
