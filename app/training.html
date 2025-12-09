@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>트레이닝 - INSWING</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* 네비게이션 바 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.6);
+            z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .nav-logo-mark {
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.14em;
+        }
+
+        .nav-logo-text {
+            color: #e5e7eb;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #e5e7eb;
+            background: rgba(148, 163, 184, 0.1);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .nav-link.active {
+            color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .nav-link.logout {
+            color: #f97316;
+        }
+
+        .nav-link.logout:hover {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        /* 메인 컨텐츠 */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e5e7eb;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 트레이닝 전용 스타일 */
+        .training-title {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+            color: #e5e7eb;
+        }
+
+        .training-subtitle {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .training-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .training-focus-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .training-focus-list h3 {
+            font-size: 1rem;
+            color: #e5e7eb;
+            margin-bottom: 0.2rem;
+        }
+
+        .training-focus-list p {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .training-routine-list {
+            list-style: none;
+            padding: 0;
+            margin: 0.8rem 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .training-routine-list label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .training-routine-list input[type='checkbox'] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .training-summary {
+            font-size: 0.9rem;
+            color: #e5e7eb;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+        }
+
+        .training-memo-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 0.3rem;
+        }
+
+        .training-memo-input {
+            width: 100%;
+            min-height: 80px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            background: rgba(15, 23, 42, 0.8);
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.75rem;
+            resize: vertical;
+        }
+
+        .training-memo-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .training-save-btn {
+            margin-top: 0.6rem;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .top-nav {
+                height: 56px;
+                padding: 0 1rem;
+            }
+
+            body {
+                padding-top: 72px;
+            }
+
+            .nav-logo-text {
+                display: none;
+            }
+
+            .nav-menu {
+                gap: 0.3rem;
+            }
+
+            .nav-link {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.8rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .card {
+                padding: 1.2rem;
+            }
+
+            .training-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <nav class="top-nav">
+        <a href="/ko/index.html" class="nav-logo">
+            <span class="nav-logo-mark">INS</span>
+            <span class="nav-logo-text">WING</span>
+        </a>
+        <div class="nav-menu">
+            <a href="/app/upload.html" class="nav-link">업로드</a>
+            <a href="/app/history.html" class="nav-link">히스토리</a>
+            <a href="/app/training.html" class="nav-link active">트레이닝</a>
+            <a href="/app/routine.html" class="nav-link">루틴</a>
+            <a href="#" onclick="logout(); return false;" class="nav-link logout">로그아웃</a>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="container">
+        <!-- ① 오늘의 핵심 포인트 카드 -->
+        <div class="card training-card">
+            <h1 class="training-title">오늘 이 스윙으로 집중할 3가지</h1>
+            <p class="training-subtitle">
+                방금 분석한 스윙을 기준으로, 오늘 연습장에서 꼭 챙기면 좋은 포인트입니다.
+            </p>
+
+            <ol class="training-focus-list">
+                <li>
+                    <h3>1. 피니시 균형 유지</h3>
+                    <p>임팩트 후 왼발 위에 머리를 세우는 느낌으로 3초간 피니시를 유지합니다.</p>
+                </li>
+                <li>
+                    <h3>2. 템포 3:1 리듬 만들기</h3>
+                    <p>백스윙 3박, 다운스윙 1박의 일정한 리듬을 의식하면서 스윙합니다.</p>
+                </li>
+                <li>
+                    <h3>3. 상체 고정 & 체중 이동</h3>
+                    <p>머리는 고정하고, 오른발에서 왼발로 체중이 자연스럽게 넘어가는 느낌을 찾습니다.</p>
+                </li>
+            </ol>
+        </div>
+
+        <!-- ② 연습 루틴 카드 (체크 UI) -->
+        <div class="card training-card">
+            <h2 class="section-title">오늘 연습 루틴</h2>
+            <p class="training-subtitle">
+                연습이 끝난 후 아래 항목들을 체크해 보세요. 루틴 달성이 쌓이면 실력이 안정됩니다.
+            </p>
+
+            <ul class="training-routine-list">
+                <li>
+                    <label>
+                        <input type="checkbox" />
+                        드라이버 피니시 3초 유지 20회
+                    </label>
+                </li>
+                <li>
+                    <label>
+                        <input type="checkbox" />
+                        7번 아이언 템포 3:1 스윙 30회
+                    </label>
+                </li>
+                <li>
+                    <label>
+                        <input type="checkbox" />
+                        웜업 스트레칭 10분 + 셋업 루틴 10회
+                    </label>
+                </li>
+            </ul>
+
+            <button class="btn-primary training-save-btn" disabled>
+                (향후) 오늘 루틴 완료로 저장
+            </button>
+        </div>
+
+        <!-- ③ 코칭 요약 & 메모 카드 -->
+        <div class="card training-card">
+            <h2 class="section-title">오늘 코칭 한 줄 요약</h2>
+            <p class="training-summary">
+                피니시에서 상체가 먼저 풀리는 경향이 있으니, 왼발 위에 머리를 세운다는 느낌으로
+                균형을 잡아보세요. 오늘은 '균형 잡힌 피니시' 하나만 기억해도 좋습니다.
+            </p>
+
+            <label for="trainingMemo" class="training-memo-label">
+                오늘 연습 후 느낀 점을 간단히 남겨보세요. (나만 보는 메모)
+            </label>
+            <textarea
+                id="trainingMemo"
+                class="training-memo-input"
+                placeholder="예: 피니시는 좋아졌는데, 긴 아이언에서 템포가 다시 빨라지는 느낌이었다."
+            ></textarea>
+        </div>
+    </div>
+
+    <!-- 스크립트 -->
+    <script src="/app/js/app.js"></script>
+    <script>
+        // 로그인 체크
+        requireLogin();
+
+        // (향후) training.js로 분리 예정
+    </script>
+</body>
+</html>
+
