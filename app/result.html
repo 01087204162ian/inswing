@@ -85,6 +85,12 @@
             border-color: rgba(148, 163, 184, 0.3);
         }
 
+        .nav-link.active {
+            color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
         .nav-link.logout {
             color: #f97316;
         }
@@ -858,7 +864,8 @@
         </a>
         <div class="nav-menu">
             <a href="/app/upload.html" class="nav-link">업로드</a>
-            <a href="/app/history.html" class="nav-link">히스토리</a>
+            <a href="/app/history.html" class="nav-link active">히스토리</a>
+            <a href="/app/training.html" class="nav-link">트레이닝</a>
             <a href="/app/routine.html" class="nav-link">루틴</a>
             <a href="#" onclick="logout(); return false;" class="nav-link logout">로그아웃</a>
         </div>
