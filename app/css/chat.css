@@ -46,6 +46,10 @@
   background: linear-gradient(135deg, #64748b, #475569);
 }
 
+.chat-message.ai .profile-icon {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
 /* 말풍선 */
 .realtime-message-list .bubble {
   padding: 10px 14px;
@@ -67,6 +71,43 @@
   background: #FFFFFF;
   color: #1e293b;
   border-bottom-left-radius: 4px;
+}
+
+.realtime-message-list .chat-message.ai .bubble {
+  background: #F3E8FF;
+  color: #1e293b;
+  border-bottom-left-radius: 4px;
+  border-left: 3px solid #8b5cf6;
+}
+
+.realtime-message-list .chat-message.ai .bubble .insight-badge {
+  display: inline-block;
+  background: #8b5cf6;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-right: 6px;
+}
+
+.realtime-message-list .chat-message.ai .bubble .ai-message {
+  display: inline;
+}
+
+/* 시스템 메시지 스타일 */
+.chat-message.system {
+  justify-content: center;
+  max-width: 100%;
+}
+
+.chat-message.system .system-notice {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-style: italic;
 }
 
 /* 메타 정보 (시간) */
