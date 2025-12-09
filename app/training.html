@@ -374,7 +374,7 @@
             <div id="summaryLoading" class="loading-dots" style="text-align: center; padding: 1rem; color: #94a3b8;">
                 코칭 요약을 불러오는 중...
             </div>
-            <p id="trainingSummary" class="training-summary" style="display: none;">
+            <p id="trainingCoachSummary" class="training-summary" style="display: none;">
                 <!-- 동적으로 채워질 코칭 요약 -->
             </p>
 
@@ -414,7 +414,7 @@
         const focusLoadingEl = document.getElementById('trainingLoading');
         const routineListEl = document.getElementById('trainingRoutineList');
         const routineLoadingEl = document.getElementById('routineLoading');
-        const summaryEl = document.getElementById('trainingSummary');
+        const summaryEl = document.getElementById('trainingCoachSummary');
         const summaryLoadingEl = document.getElementById('summaryLoading');
         const saveRoutineBtn = document.getElementById('saveRoutineBtn');
 
@@ -436,10 +436,63 @@
                 const data = await response.json();
                 console.log('[Training] 트레이닝 데이터 수신:', data);
 
-                // UI에 데이터 바인딩
-                renderFocusPoints(data.focus || []);
-                renderRoutineItems(data.routine_items || []);
-                renderSummary(data.coach_summary || '');
+                // === DOM 요소 가져오기 ===
+                const focusListElDirect = document.getElementById('trainingFocusList');
+                const routineListElDirect = document.getElementById('trainingRoutineList');
+                const summaryElDirect = document.getElementById('trainingCoachSummary');
+
+                if (!focusListElDirect || !routineListElDirect || !summaryElDirect) {
+                    console.warn('[Training] 일부 DOM 요소를 찾지 못했습니다.');
+                    return;
+                }
+
+                // === 1. 집중 포인트 3가지 채우기 ===
+                if (focusLoadingEl) focusLoadingEl.style.display = 'none';
+                focusListElDirect.innerHTML = ''; // 기존 더미 내용 제거
+
+                (data.focus || []).forEach((text, idx) => {
+                    const li = document.createElement('li');
+
+                    const title = document.createElement('h3');
+                    title.textContent = `${idx + 1}. ${text}`;
+                    title.style.fontSize = '1rem';
+
+                    // 설명은 나중에 AI 확장용, 지금은 한 줄 텍스트만
+                    const desc = document.createElement('p');
+                    desc.textContent = ''; // 필요하면 기본 멘트 넣기
+
+                    li.appendChild(title);
+                    li.appendChild(desc);
+                    focusListElDirect.appendChild(li);
+                });
+                focusListElDirect.style.display = 'block';
+
+                // === 2. 오늘 연습 루틴 채우기 ===
+                if (routineLoadingEl) routineLoadingEl.style.display = 'none';
+                routineListElDirect.innerHTML = '';
+
+                (data.routine_items || []).forEach((item) => {
+                    const li = document.createElement('li');
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+
+                    checkbox.type = 'checkbox';
+
+                    const textNode = document.createTextNode(' ' + item);
+
+                    label.appendChild(checkbox);
+                    label.appendChild(textNode);
+                    li.appendChild(label);
+                    routineListElDirect.appendChild(li);
+                });
+                routineListElDirect.style.display = 'block';
+
+                // === 3. 코칭 한 줄 요약 채우기 ===
+                if (summaryLoadingEl) summaryLoadingEl.style.display = 'none';
+                summaryElDirect.textContent =
+                    data.coach_summary ||
+                    '오늘은 이 스윙을 기준으로, 피니시와 리듬에 집중해 연습해 보세요.';
+                summaryElDirect.style.display = 'block';
 
             } catch (error) {
                 console.error('[Training] 데이터 로드 오류:', error);
