@@ -7,6 +7,12 @@
   let channelState = 'idle';
   let sessionId = null;
 
+  // 질문형 코칭 관련 변수
+  let questionInput = null;
+  let questionBtn = null;
+  let questionStatus = null;
+  let questionAnswerBox = null;
+
   const $ = (id) => document.getElementById(id);
 
   function getSwingId() {
@@ -352,6 +358,125 @@
     list.scrollTop = list.scrollHeight;
   }
 
+  // ===== 질문형 코칭 =====
+
+  async function submitQuestion() {
+    if (!questionInput || !questionBtn || !questionStatus || !questionAnswerBox) {
+      console.warn('[Realtime] 질문 코칭 DOM 요소가 준비되지 않았습니다.');
+      return;
+    }
+
+    const raw = questionInput.value || '';
+    const question = raw.trim();
+
+    if (!question) {
+      questionStatus.textContent = '먼저 질문 내용을 입력해 주세요.';
+      return;
+    }
+
+    if (!sessionId) {
+      console.warn('[Realtime] sessionId 없음 – 질문 전송 불가');
+      questionStatus.textContent = '스윙 정보가 없습니다. 다시 접속해 주세요.';
+      return;
+    }
+
+    questionBtn.disabled = true;
+    questionInput.readOnly = true;
+    questionStatus.textContent = '답변 생성 중입니다...';
+    questionAnswerBox.textContent = '';
+    questionAnswerBox.style.opacity = '0.7';
+
+    try {
+      console.log('[Question] 질문 전송:', { sessionId, question });
+
+      const resp = await apiFetch(`/swings/${sessionId}/questions`, {
+        method: 'POST',
+        body: JSON.stringify({
+          target: 'ai',
+          question: question
+        })
+      });
+
+      if (!resp.ok) {
+        console.error('[Question] 응답 오류:', resp.status, resp.statusText);
+        questionStatus.textContent = '답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+        questionBtn.disabled = false;
+        questionInput.readOnly = false;
+        return;
+      }
+
+      const data = await resp.json();
+      console.log('[Question] 응답 데이터:', data);
+
+      const answer =
+        data.answer ||
+        data.coaching ||
+        data.message ||
+        '답변은 생성되었으나 형식을 알 수 없습니다. 서버 로그를 확인해 주세요.';
+
+      questionAnswerBox.textContent = answer;
+      questionAnswerBox.style.opacity = '1';
+      questionStatus.textContent = '코칭 답변이 생성되었습니다.';
+
+      // (옵션) 실시간 코칭 패널에도 코치 메시지로 추가
+      appendMessage('coach', answer, Date.now());
+    } catch (e) {
+      console.error('[Question] 예외 발생:', e);
+      questionStatus.textContent = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
+    } finally {
+      questionBtn.disabled = false;
+      questionInput.readOnly = false;
+    }
+  }
+
+  function setupQuestionCoaching() {
+    questionInput = document.getElementById('coachingQuestionInput');
+    questionBtn = document.getElementById('coachingQuestionBtn');
+    questionStatus = document.getElementById('coachingQuestionStatus');
+    questionAnswerBox = document.getElementById('coachingAnswerBox');
+
+    if (!questionInput || !questionBtn) {
+      console.warn('[Question] 질문 코칭 UI 요소 없음 – 스킵');
+      return;
+    }
+
+    // 버튼 초기 상태 확인 및 활성화
+    if (questionBtn.disabled) {
+      console.log('[Question] 버튼이 비활성화 상태였습니다. 활성화합니다.');
+      questionBtn.disabled = false;
+    }
+
+    // 입력창 초기 상태 확인 및 활성화
+    if (questionInput.readOnly) {
+      console.log('[Question] 입력창이 읽기 전용 상태였습니다. 활성화합니다.');
+      questionInput.readOnly = false;
+    }
+
+    // 버튼 클릭
+    questionBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('[Question] 버튼 클릭 이벤트 발생');
+      submitQuestion();
+    });
+
+    // Enter로도 전송 (Shift+Enter는 줄바꿈)
+    questionInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        console.log('[Question] Enter 키 입력');
+        submitQuestion();
+      }
+    });
+
+    console.log('[Question] 질문형 코칭 UI 초기화 완료', {
+      button: questionBtn ? 'found' : 'not found',
+      input: questionInput ? 'found' : 'not found',
+      buttonDisabled: questionBtn?.disabled,
+      inputReadOnly: questionInput?.readOnly
+    });
+  }
+
   // ===== 모바일 패널 토글 =====
   
   function setupMobileToggle() {
@@ -444,12 +569,14 @@
         setTimeout(() => {
           setupMobileToggle();
           initRealtime(sessionId);
+          setupQuestionCoaching();
         }, 500);
       });
     } else {
       setTimeout(() => {
         setupMobileToggle();
         initRealtime(sessionId);
+        setupQuestionCoaching();
       }, 500);
     }
   }
