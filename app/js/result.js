@@ -51,10 +51,22 @@
 
     if (input) {
       input.disabled = !enabled;
+      input.readOnly = !enabled; // 혹시 모를 경우 대비
       input.placeholder = enabled ? '메시지를 입력하세요...' : '연결 중...';
+
+      console.log('[Realtime] 입력창 상태 변경', {
+        enabled,
+        disabled: input.disabled,
+        readOnly: input.readOnly
+      });
     }
+
     if (sendBtn) {
       sendBtn.disabled = !enabled;
+      console.log('[Realtime] 전송 버튼 상태 변경', {
+        enabled,
+        disabled: sendBtn.disabled
+      });
     }
   }
 
@@ -66,7 +78,7 @@
       return;
     }
 
-    if (typeof Phoenix === 'undefined') {
+    if (typeof Phoenix === 'undefined' || !Phoenix.Socket) {
       console.warn('[Realtime] Phoenix Socket 미로드');
       return;
     }
@@ -75,7 +87,7 @@
     setChatEnabled(false);
 
     // 이미 열린 소켓이 있으면 재사용
-    if (socket && socket.connectionState() === 'open') {
+    if (socket && socket.connectionState && socket.connectionState() === 'open') {
       if (channel && channelState === 'joined') {
         console.log('[Realtime] 이미 연결되어 있음');
         setConnectionStatus('joined');
@@ -119,7 +131,7 @@
   }
 
   function joinChannel(sessionIdParam) {
-    if (!socket || socket.connectionState() !== 'open') {
+    if (!socket || !socket.connectionState || socket.connectionState() !== 'open') {
       console.warn('[Realtime] 소켓 미연결');
       return;
     }
@@ -180,11 +192,6 @@
     channel
       .join()
       .receive('ok', (resp) => {
-        if (channelState === 'joined') {
-          console.warn('[Realtime] JOIN OK 중복 수신 무시');
-          return;
-        }
-
         console.log(
           '[Realtime] 🎯 JOIN OK (기존 메시지:',
           (resp.messages || []).length,
@@ -194,6 +201,15 @@
         channelState = 'joined';
         setConnectionStatus('joined');
         setChatEnabled(true);
+
+        // JOIN 직후 실제 DOM 상태 확인용 로그
+        const input = $('realtimeMessageInput');
+        const btn = $('realtimeSendBtn');
+        console.log('[Realtime] JOIN 후 DOM 상태', {
+          inputDisabled: input?.disabled,
+          inputReadOnly: input?.readOnly,
+          btnDisabled: btn?.disabled
+        });
 
         // 기존 메시지 렌더링
         if (resp.messages && Array.isArray(resp.messages)) {
