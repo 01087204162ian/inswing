@@ -389,7 +389,7 @@
     try {
       console.log('[Question] 질문 전송:', { sessionId, question });
 
-      const resp = await apiFetch(`/swings/${sessionId}/questions`, {
+      const resp = await apiFetch(`/v1/swings/${sessionId}/questions`, {
         method: 'POST',
         body: JSON.stringify({
           target: 'ai',
