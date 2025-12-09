@@ -399,7 +399,19 @@
 
       if (!resp.ok) {
         console.error('[Question] 응답 오류:', resp.status, resp.statusText);
-        questionStatus.textContent = '답변 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+        
+        let errorMessage = '답변 생성에 실패했습니다.';
+        
+        if (resp.status === 404) {
+          errorMessage = '질문 기능이 아직 준비되지 않았습니다. 곧 업데이트될 예정입니다.';
+          console.warn('[Question] API 엔드포인트가 존재하지 않습니다. 백엔드에 /swings/{id}/questions 엔드포인트를 추가해야 합니다.');
+        } else if (resp.status === 401) {
+          errorMessage = '로그인이 필요합니다. 다시 로그인해 주세요.';
+        } else if (resp.status === 500) {
+          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+        }
+        
+        questionStatus.textContent = errorMessage;
         questionBtn.disabled = false;
         questionInput.readOnly = false;
         return;
