@@ -207,6 +207,136 @@
             cursor: pointer;
         }
 
+        /* 훈련 기록 보기 */
+        .training-logs-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .training-logs-link {
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.7);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .training-logs-link:hover {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+            color: #bbf7d0;
+        }
+
+        .training-logs-count {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+
+        /* 모달 */
+        .training-logs-modal.hidden {
+            display: none;
+        }
+
+        .training-logs-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .training-logs-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+        }
+
+        .training-logs-dialog {
+            position: relative;
+            max-width: 480px;
+            width: 90%;
+            max-height: 70vh;
+            background: rgba(15, 23, 42, 0.98);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            padding: 1rem 1.25rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .training-logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .training-logs-header h3 {
+            font-size: 1rem;
+            color: #e5e7eb;
+        }
+
+        .training-logs-close {
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .training-logs-close:hover {
+            color: #f97316;
+        }
+
+        .training-logs-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .training-logs-empty {
+            color: #9ca3af;
+            padding: 0.75rem 0.25rem;
+        }
+
+        .training-log-item {
+            padding: 0.6rem 0.3rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .training-log-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+            font-size: 0.78rem;
+            color: #9ca3af;
+        }
+
+        .training-log-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .training-log-tag {
+            padding: 0.15rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            font-size: 0.75rem;
+            color: #e5e7eb;
+        }
+
         .training-summary {
             font-size: 0.9rem;
             color: #e5e7eb;
@@ -362,9 +492,17 @@
             <ul id="trainingRoutineList" class="training-routine-list" style="display: none;">
                 <!-- 동적으로 채워질 루틴 목록 -->
             </ul>
+            <div class="training-logs-footer">
+                <button id="viewTrainingLogsBtn" class="training-logs-link">
+                    이 스윙 훈련 기록 보러가기
+                </button>
+                <span id="trainingLogsCount" class="training-logs-count">
+                    기록 0회
+                </span>
+            </div>
 
             <button id="saveRoutineBtn" class="btn-primary training-save-btn" disabled>
-                (향후) 오늘 루틴 완료로 저장
+                오늘 연습 기록 남기기
             </button>
         </div>
 
@@ -389,6 +527,22 @@
         </div>
     </div>
 
+    <!-- 훈련 기록 모달 -->
+    <div id="trainingLogsModal" class="training-logs-modal hidden">
+        <div class="training-logs-backdrop"></div>
+        <div class="training-logs-dialog">
+            <div class="training-logs-header">
+                <h3>이 스윙 훈련 기록</h3>
+                <button id="closeTrainingLogsBtn" class="training-logs-close">✕</button>
+            </div>
+            <div id="trainingLogsBody" class="training-logs-body">
+                <div class="training-logs-empty">
+                    아직 이 스윙으로 저장된 훈련 기록이 없습니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 스크립트 -->
     <script src="/app/js/app.js"></script>
     <script>
@@ -401,6 +555,7 @@
         }
 
         const swingId = getQueryParam('id');
+        let trainingLogsCache = null;
         console.log('[Training] swingId:', swingId);
 
         // swingId가 없으면 히스토리로 리다이렉트
@@ -417,6 +572,8 @@
         const summaryEl = document.getElementById('trainingCoachSummary');
         const summaryLoadingEl = document.getElementById('summaryLoading');
         const saveRoutineBtn = document.getElementById('saveRoutineBtn');
+        const trainingLogsCountEl = document.getElementById('trainingLogsCount');
+        const viewTrainingLogsBtn = document.getElementById('viewTrainingLogsBtn');
 
         // ===== API 호출 =====
         async function loadTrainingData(swingId) {
@@ -501,6 +658,9 @@
                     saveRoutineBtn.style.opacity = '1';
                     saveRoutineBtn.style.cursor = 'pointer';
                 }
+
+                // === 5. 훈련 기록 요약 로드 ===
+                loadTrainingLogsSummary(swingId);
 
             } catch (error) {
                 console.error('[Training] 데이터 로드 오류:', error);
@@ -593,6 +753,90 @@
             if (summaryEl) summaryEl.style.display = 'none';
         }
 
+        // ===== 훈련 기록 요약 로드 =====
+        async function loadTrainingLogsSummary(swingIdValue) {
+            if (!trainingLogsCountEl || !swingIdValue) return;
+            try {
+                const resp = await apiFetch(`/v1/swings/${swingIdValue}/training-logs`);
+                if (!resp.ok) {
+                    console.warn('[Training] 훈련 기록 요약 조회 실패:', resp.status, resp.statusText);
+                    trainingLogsCountEl.textContent = '기록 0회';
+                    return;
+                }
+                const data = await resp.json();
+                trainingLogsCache = data.logs || [];
+                const count = data.count || trainingLogsCache.length || 0;
+                trainingLogsCountEl.textContent = `기록 ${count}회`;
+            } catch (err) {
+                console.error('[Training] 훈련 기록 요약 조회 오류:', err);
+            }
+        }
+
+        // ===== 훈련 기록 모달 렌더 =====
+        function openTrainingLogsModal() {
+            const modal = document.getElementById('trainingLogsModal');
+            const bodyEl = document.getElementById('trainingLogsBody');
+            if (!modal || !bodyEl) return;
+
+            modal.classList.remove('hidden');
+            bodyEl.innerHTML = '';
+
+            if (!trainingLogsCache || trainingLogsCache.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'training-logs-empty';
+                emptyDiv.textContent = '아직 이 스윙으로 저장된 훈련 기록이 없습니다.';
+                bodyEl.appendChild(emptyDiv);
+                return;
+            }
+
+            trainingLogsCache.forEach((log) => {
+                const item = document.createElement('div');
+                item.className = 'training-log-item';
+
+                const meta = document.createElement('div');
+                meta.className = 'training-log-meta';
+
+                const dateStr = new Date(log.created_at).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const left = document.createElement('span');
+                left.textContent = dateStr;
+
+                const right = document.createElement('span');
+                const completedCount = Array.isArray(log.completed_items)
+                    ? log.completed_items.length
+                    : 0;
+                right.textContent = `완료 ${completedCount}/${log.total_items}`;
+
+                meta.appendChild(left);
+                meta.appendChild(right);
+
+                const tags = document.createElement('div');
+                tags.className = 'training-log-tags';
+
+                (log.completed_items || []).forEach((text) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'training-log-tag';
+                    tag.textContent = text;
+                    tags.appendChild(tag);
+                });
+
+                item.appendChild(meta);
+                item.appendChild(tags);
+                bodyEl.appendChild(item);
+            });
+        }
+
+        function closeTrainingLogsModal() {
+            const modal = document.getElementById('trainingLogsModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
         // ===== 루틴 저장 버튼 이벤트 =====
         if (saveRoutineBtn) {
             saveRoutineBtn.addEventListener('click', async () => {
@@ -642,6 +886,9 @@
                     // 저장 성공
                     saveRoutineBtn.textContent = '기록 완료! 오늘 좋았습니다 👏';
 
+                    // 로그 재로딩 (카운트 업데이트)
+                    loadTrainingLogsSummary(swingId);
+
                     // 3초 후 다시 저장 가능 상태
                     setTimeout(() => {
                         saveRoutineBtn.disabled = false;
@@ -656,8 +903,44 @@
             });
         }
 
+        // ===== 모달 이벤트 바인딩 =====
+        const closeTrainingLogsBtn = document.getElementById('closeTrainingLogsBtn');
+        const trainingLogsModal = document.getElementById('trainingLogsModal');
+        const trainingLogsBackdrop = trainingLogsModal ? trainingLogsModal.querySelector('.training-logs-backdrop') : null;
+
+        if (viewTrainingLogsBtn) {
+            viewTrainingLogsBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (trainingLogsCache === null && swingId) {
+                    await loadTrainingLogsSummary(swingId);
+                }
+                openTrainingLogsModal();
+            });
+        }
+
+        if (closeTrainingLogsBtn) {
+            closeTrainingLogsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeTrainingLogsModal();
+            });
+        }
+
+        if (trainingLogsBackdrop) {
+            trainingLogsBackdrop.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeTrainingLogsModal();
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTrainingLogsModal();
+            }
+        });
+
         console.log('[Training] 오늘 루틴 완료 저장 기능 활성화');
         console.log('[Training] 루틴 저장 버튼 UX 업데이트 완료');
+        console.log('[Training] 이 스윙 훈련 기록 모달 기능 활성화');
 
         // ===== 초기화 =====
         if (swingId) {
