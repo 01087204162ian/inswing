@@ -640,7 +640,8 @@
                     }
 
                     alert('오늘 루틴 기록을 저장했어요 ✅');
-                    saveRoutineBtn.textContent = '오늘 루틴 완료 저장됨';
+                    saveRoutineBtn.disabled = false; // 여러 번 저장 가능
+                    saveRoutineBtn.textContent = '오늘 루틴 완료로 저장';
                 } catch (err) {
                     console.error('[Training] 루틴 저장 오류:', err);
                     alert('저장 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
