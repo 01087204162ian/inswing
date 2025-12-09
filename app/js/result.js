@@ -48,27 +48,41 @@
   function setChatEnabled(enabled) {
     const input = $('realtimeMessageInput');
     const sendBtn = $('realtimeSendBtn');
-
+  
     if (input) {
       input.disabled = !enabled;
-      input.readOnly = !enabled; // 혹시 모를 경우 대비
+      input.readOnly = !enabled;
       input.placeholder = enabled ? '메시지를 입력하세요...' : '연결 중...';
-
+  
+      // 💡 CSS나 다른 스크립트가 막고 있어도 강제로 열어준다
+      input.style.pointerEvents = enabled ? 'auto' : 'none';
+      input.style.opacity = enabled ? '1' : '0.5';
+      input.style.cursor = enabled ? 'text' : 'not-allowed';
+  
       console.log('[Realtime] 입력창 상태 변경', {
         enabled,
         disabled: input.disabled,
-        readOnly: input.readOnly
+        readOnly: input.readOnly,
+        pointerEvents: input.style.pointerEvents
       });
     }
-
+  
     if (sendBtn) {
       sendBtn.disabled = !enabled;
+  
+      // 버튼도 강제 오픈/닫기
+      sendBtn.style.pointerEvents = enabled ? 'auto' : 'none';
+      sendBtn.style.opacity = enabled ? '1' : '0.5';
+      sendBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  
       console.log('[Realtime] 전송 버튼 상태 변경', {
         enabled,
-        disabled: sendBtn.disabled
+        disabled: sendBtn.disabled,
+        pointerEvents: sendBtn.style.pointerEvents
       });
     }
   }
+  
 
   // ===== WebSocket / 채널 연결 =====
 
