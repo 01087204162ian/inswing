@@ -495,6 +495,13 @@
                     '오늘은 이 스윙을 기준으로, 피니시와 리듬에 집중해 연습해 보세요.';
                 summaryElDirect.style.display = 'block';
 
+                // === 4. 루틴 저장 버튼 활성화 ===
+                if (saveRoutineBtn) {
+                    saveRoutineBtn.disabled = false;
+                    saveRoutineBtn.style.opacity = '1';
+                    saveRoutineBtn.style.cursor = 'pointer';
+                }
+
             } catch (error) {
                 console.error('[Training] 데이터 로드 오류:', error);
                 showError('트레이닝 데이터를 불러오는 중 오류가 발생했습니다.', true);
