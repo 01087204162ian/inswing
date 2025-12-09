@@ -255,12 +255,32 @@
   // ===== 메시지 전송 / 렌더링 =====
 
   function sendMessage(msg) {
-    if (!channel || channelState !== 'joined') {
-      console.warn('[Realtime] 채널이 joined 상태가 아님');
+    console.log('[Realtime] sendMessage 호출:', { msg, channelState, hasChannel: !!channel, sessionId });
+    
+    if (!channel) {
+      console.warn('[Realtime] 채널 객체 없음');
       return;
     }
 
-    if (!msg || !msg.trim()) return;
+    if (channelState !== 'joined') {
+      console.warn('[Realtime] 채널 상태가 joined 아님:', channelState);
+      return;
+    }
+
+    if (channel.state !== 'joined') {
+      console.warn('[Realtime] 채널 실제 상태가 joined 아님:', channel.state);
+      return;
+    }
+
+    if (!msg || !msg.trim()) {
+      console.warn('[Realtime] 메시지가 비어있음');
+      return;
+    }
+
+    if (!sessionId) {
+      console.warn('[Realtime] sessionId 없음');
+      return;
+    }
 
     const payload = {
       type: 'chat_message',
@@ -270,6 +290,8 @@
       message: msg.trim(),
       meta: { ts: Date.now() }
     };
+
+    console.log('[Realtime] ➡ event:new 전송:', payload);
 
     channel
       .push('event:new', payload)
@@ -321,25 +343,44 @@
       return;
     }
 
+    console.log('[Realtime] 초기화 시작, sessionId:', sessionId);
+
     const input = $('realtimeMessageInput');
     const sendBtn = $('realtimeSendBtn');
 
     if (sendBtn) {
-      sendBtn.addEventListener('click', () => {
-        if (!input) return;
+      sendBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('[Realtime] 전송 버튼 클릭');
+        if (!input) {
+          console.warn('[Realtime] 입력창 요소 없음');
+          return;
+        }
         const msg = input.value;
-        if (msg) sendMessage(msg);
+        console.log('[Realtime] 입력값:', msg);
+        if (msg) {
+          sendMessage(msg);
+        } else {
+          console.warn('[Realtime] 메시지가 비어있음');
+        }
       });
+    } else {
+      console.warn('[Realtime] 전송 버튼 요소 없음');
     }
 
     if (input) {
       input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
+          console.log('[Realtime] Enter 키 입력');
           const msg = input.value;
-          if (msg) sendMessage(msg);
+          if (msg) {
+            sendMessage(msg);
+          }
         }
       });
+    } else {
+      console.warn('[Realtime] 입력창 요소 없음');
     }
 
     if (document.readyState === 'loading') {
