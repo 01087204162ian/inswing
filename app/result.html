@@ -1213,13 +1213,21 @@
         // 분석 결과 로드
         async function loadResult() {
             try {
+                console.log('[Result] 스윙 데이터 로드 시작, swingId:', swingId);
+                console.log('[Result] User Agent:', navigator.userAgent);
+                console.log('[Result] 모바일 여부:', /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent));
+                
                 const response = await apiFetch(`/swings/${swingId}`);
+                console.log('[Result] API 응답 상태:', response.status, response.statusText);
 
                 if (!response.ok) {
-                    throw new Error('분석 결과를 불러올 수 없습니다.');
+                    const errorText = await response.text();
+                    console.error('[Result] API 오류 응답:', response.status, errorText);
+                    throw new Error(`서버 오류 (${response.status}): ${errorText || '분석 결과를 불러올 수 없습니다.'}`);
                 }
 
                 const data = await response.json();
+                console.log('[Result] 데이터 로드 성공:', Object.keys(data));
                 const { swing, metrics, feeling, comment } = data;
 
                 loadingDiv.style.display = 'none';
@@ -1293,7 +1301,52 @@
 
             } catch (error) {
                 console.error('결과 로드 오류:', error);
-                alert('분석 결과를 불러오는 중 오류가 발생했습니다.');
+                
+                // 상세한 오류 정보 로깅
+                if (error.message) {
+                    console.error('오류 메시지:', error.message);
+                }
+                if (error.stack) {
+                    console.error('오류 스택:', error.stack);
+                }
+                
+                // 네트워크 오류인지 확인
+                const isNetworkError = error.message && (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('network') ||
+                    error.name === 'TypeError'
+                );
+                
+                const errorMessage = isNetworkError 
+                    ? '네트워크 연결을 확인해주세요. 인터넷 연결이 불안정할 수 있습니다.'
+                    : (error.message || '분석 결과를 불러올 수 없습니다.');
+                
+                // 로딩 메시지 업데이트
+                loadingDiv.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <p style="color: #f87171; margin-bottom: 1rem; font-size: 1.1rem;">
+                            분석 결과를 불러오는 중 오류가 발생했습니다.
+                        </p>
+                        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                            ${errorMessage}
+                        </p>
+                        <button onclick="location.reload()" style="
+                            padding: 0.75rem 1.5rem;
+                            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            font-size: 0.95rem;
+                            min-width: 120px;
+                        ">다시 시도</button>
+                    </div>
+                `;
+                
+                // 모바일에서도 알림 표시
+                showToast('분석 결과를 불러올 수 없습니다. 다시 시도해주세요.');
             }
         }
 
