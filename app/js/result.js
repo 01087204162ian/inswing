@@ -37,6 +37,13 @@
       return console.warn('[Realtime] Phoenix Socket 미로드 → 종료');
     }
 
+    // 이미 소켓이 연결되어 있고 채널도 joined 상태면 재사용
+    if (socket && socket.connectionState() === 'open' && 
+        channel && channel.state === 'joined') {
+      console.log('[Realtime] 기존 연결 재사용');
+      return;
+    }
+
     const socketUrl = 'wss://realtime.inswing.ai/socket/websocket?vsn=2.0.0';
     console.log('[Realtime] WebSocket 연결 시도:', socketUrl);
 
@@ -72,14 +79,20 @@
   // 채널 join
   // ──────────────────────────────────────────────────────────
   function joinChannel(swingId) {
-    if (!socket || socket.connectionState() !== 'open')
+    if (!socket || socket.connectionState() !== 'open') {
       return console.warn('[Realtime] 소켓 미연결 상태 → join 보류');
+    }
 
-    if (isJoining)
+    if (isJoining) {
       return console.warn('[Realtime] 이미 join 중 → 중복 join 방지');
+    }
 
-    if (channel && (channel.state === 'joined' || channel.state === 'joining'))
-      return console.warn('[Realtime] 채널 이미', channel.state);
+    if (channel) {
+      const state = channel.state;
+      if (state === 'joined' || state === 'joining') {
+        return console.warn('[Realtime] 채널 이미', state, '→ 중복 join 방지');
+      }
+    }
 
     // 이전 채널 clean up
     if (channel) {
@@ -158,10 +171,9 @@
     });
 
     ch.onError((reason) => {
-      // 🔥 빈 객체 또는 null/undefined 에러는 무시 (presence sync 중 자주 발생하는 정상 패턴)
+      // 🔥 빈 객체 또는 null/undefined 에러는 조용히 무시 (presence sync 중 자주 발생하는 정상 패턴)
       if (!reason || (typeof reason === "object" && Object.keys(reason).length === 0)) {
-        console.warn("[Realtime] ⚠ 채널 에러 감지 — 빈 error 객체 → 무시");
-        return;
+        return; // 로그 없이 조용히 무시
       }
     
       console.error("[Realtime] ⚠ 채널 에러:", reason);
