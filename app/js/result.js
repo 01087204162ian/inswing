@@ -167,7 +167,11 @@
         .receive('ok', (resp) => {
           console.log('[Realtime] ✅ JOIN OK:', resp, 'state:', channel.state);
           isJoining = false;
-          isJoined = true;
+ 
+          // 실제 채널 state가 joined인지 확인한 뒤 플래그 업데이트
+          if (channel.state === 'joined') {
+            isJoined = true;
+          }
           updateConnectionStatus('joined');
           setTimeout(() => enableChatInput(true), 100);
           
