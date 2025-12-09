@@ -352,6 +352,43 @@
     list.scrollTop = list.scrollHeight;
   }
 
+  // ===== 모바일 패널 토글 =====
+  
+  function setupMobileToggle() {
+    const header = $('realtimeHeader');
+    const wrapper = document.querySelector('.realtime-coaching-wrapper');
+    
+    if (!header || !wrapper) {
+      console.warn('[Realtime] 모바일 토글 설정 실패: 요소 없음');
+      return;
+    }
+
+    // 모바일에서만 클릭 이벤트 추가
+    function handleToggle(e) {
+      // 입력창이나 전송 버튼, 메시지 리스트 클릭 시에는 토글하지 않음
+      if (e.target.closest('.realtime-input-area') || 
+          e.target.closest('.realtime-message-list') ||
+          e.target.closest('.realtime-send-btn') ||
+          e.target.closest('#realtimeMessageInput')) {
+        return;
+      }
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      wrapper.classList.toggle('expanded');
+      console.log('[Realtime] 모바일 패널 토글:', wrapper.classList.contains('expanded') ? '열림' : '닫힘');
+    }
+    
+    // 클릭과 터치 이벤트 모두 추가
+    header.addEventListener('click', handleToggle);
+    header.addEventListener('touchend', (e) => {
+      handleToggle(e);
+    }, { passive: false });
+    
+    console.log('[Realtime] 모바일 토글 이벤트 설정 완료');
+  }
+
   // ===== 초기화 =====
 
   function init() {
@@ -401,12 +438,19 @@
       console.warn('[Realtime] 입력창 요소 없음');
     }
 
+    // 모바일 패널 토글 설정
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => initRealtime(sessionId), 500);
+        setTimeout(() => {
+          setupMobileToggle();
+          initRealtime(sessionId);
+        }, 500);
       });
     } else {
-      setTimeout(() => initRealtime(sessionId), 500);
+      setTimeout(() => {
+        setupMobileToggle();
+        initRealtime(sessionId);
+      }, 500);
     }
   }
 
