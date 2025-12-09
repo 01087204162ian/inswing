@@ -76,6 +76,7 @@
             font-weight: 500;
             transition: all 0.2s;
             border: 1px solid transparent;
+            white-space: nowrap; /* 한글 메뉴 줄바꿈 방지 */
         }
 
         .nav-link:hover {
@@ -316,7 +317,8 @@
         @media (max-width: 768px) {
             .top-nav {
                 height: 56px;
-                padding: 0 1rem;
+                padding: 0 0.75rem;
+                overflow-x: auto; /* 너무 좁으면 가로 스크롤로 처리 */
             }
             
             body {
@@ -329,11 +331,12 @@
             
             .nav-menu {
                 gap: 0.3rem;
+                flex-wrap: nowrap; /* 줄바꿈 없이 한 줄 유지 */
             }
             
             .nav-link {
-                padding: 0.4rem 0.7rem;
-                font-size: 0.8rem;
+                padding: 0.35rem 0.65rem;
+                font-size: 0.78rem;
             }
 
             .card {
