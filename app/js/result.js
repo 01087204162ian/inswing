@@ -5,6 +5,7 @@
     let socket = null;
     let channel = null;
     let isJoined = false;
+    let isJoining = false;
     let messageRef = 0;
     let initialized = false; // 🔥 중복 init 방지
   
@@ -75,6 +76,17 @@
         console.warn('[Realtime] 소켓이 연결되지 않아 채널에 join할 수 없습니다.');
         return;
       }
+
+      // 이미 join 중이거나 이미 joined 상태면 중복 join 방지
+      if (isJoining) {
+        console.warn('[Realtime] 이미 join 중입니다. 중복 join 방지.');
+        return;
+      }
+
+      if (channel && channel.state === 'joined') {
+        console.warn('[Realtime] 이미 joined 상태입니다. 중복 join 방지.');
+        return;
+      }
   
       // 이전 채널 정리 (중복 메시지 방지의 핵심)
       if (channel) {
@@ -86,16 +98,22 @@
         channel = null;
         isJoined = false;
       }
+
+      isJoining = true;
+      isJoined = false;
   
       const topic = `session:${swingId}`;
       console.log('[Realtime] 채널 join 시도:', topic);
   
-      channel = socket.channel(topic, {}); // 🔥 가장 처음에 잘 동작하던 형태
+      channel = socket.channel(topic, {
+        rejoinAfterMs: () => false // 자동 재연결 비활성화
+      });
   
       channel
         .join()
         .receive('ok', (resp) => {
           console.log('[Realtime] ✅ JOIN OK:', resp, 'state:', channel.state);
+          isJoining = false;
           isJoined = true;
           updateConnectionStatus('joined');
           setTimeout(() => enableChatInput(true), 100);
@@ -110,12 +128,14 @@
         })
         .receive('error', (err) => {
           console.error('[Realtime] ❌ JOIN ERROR:', err, 'state:', channel.state);
+          isJoining = false;
           isJoined = false;
           updateConnectionStatus('error');
           enableChatInput(false);
         })
         .receive('timeout', () => {
           console.warn('[Realtime] ⏱️ JOIN TIMEOUT', 'state:', channel.state);
+          isJoining = false;
           isJoined = false;
           updateConnectionStatus('timeout');
           enableChatInput(false);
@@ -158,6 +178,7 @@
       // 채널이 완전히 끊어지면 onClose / socket.onClose에서 다시 처리.
       channel.onClose(() => {
         console.log('[Realtime] ℹ️ 채널 종료됨');
+        isJoining = false;
         isJoined = false;
         enableChatInput(false);
         updateConnectionStatus('disconnected');
@@ -304,9 +325,12 @@
         return;
       }
   
-      // 🔥 channel.state 체크는 빼고, 우리가 관리하는 isJoined만 사용
-      if (!isJoined) {
-        console.warn('[Realtime] 채널이 아직 joined 상태가 아닙니다. isJoined=false');
+      // isJoined 플래그와 실제 채널 상태 모두 확인
+      if (!isJoined || !channel || channel.state !== 'joined') {
+        console.warn('[Realtime] 채널이 아직 joined 상태가 아닙니다.', {
+          isJoined,
+          channelState: channel?.state
+        });
         return;
       }
   
