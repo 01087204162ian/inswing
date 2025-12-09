@@ -471,12 +471,13 @@
                 if (routineLoadingEl) routineLoadingEl.style.display = 'none';
                 routineListElDirect.innerHTML = '';
 
-                (data.routine_items || []).forEach((item) => {
+                (data.routine_items || []).forEach((item, idx) => {
                     const li = document.createElement('li');
                     const label = document.createElement('label');
                     const checkbox = document.createElement('input');
 
                     checkbox.type = 'checkbox';
+                    checkbox.dataset.index = String(idx);
 
                     const textNode = document.createTextNode(' ' + item);
 
@@ -587,11 +588,62 @@
 
         // ===== 루틴 저장 버튼 이벤트 =====
         if (saveRoutineBtn) {
-            saveRoutineBtn.addEventListener('click', () => {
-                console.log('[Training] 루틴 저장 - 나중에 API 연동 예정');
-                // 향후: 체크된 루틴 항목들을 수집하여 API로 전송
+            saveRoutineBtn.addEventListener('click', async () => {
+                const routineListElDom = document.getElementById('trainingRoutineList');
+                if (!routineListElDom) return;
+
+                const checkboxes = routineListElDom.querySelectorAll('input[type="checkbox"]');
+                const completedItems = [];
+
+                checkboxes.forEach((cb) => {
+                    if (cb.checked) {
+                        const label = cb.closest('label');
+                        if (label) {
+                            const text = label.textContent.trim();
+                            if (text) completedItems.push(text);
+                        }
+                    }
+                });
+
+                if (completedItems.length === 0) {
+                    alert('오늘 완료한 루틴을 하나 이상 체크해 주세요.');
+                    return;
+                }
+
+                saveRoutineBtn.disabled = true;
+                const originalText = saveRoutineBtn.textContent;
+                saveRoutineBtn.textContent = '저장 중...';
+
+                try {
+                    const resp = await apiFetch('/v1/training-sessions', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            swing_id: Number(swingId),
+                            completed_items: completedItems,
+                            total_items: checkboxes.length
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        console.error('[Training] 루틴 저장 실패:', resp.status, resp.statusText);
+                        alert('루틴 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+                        saveRoutineBtn.disabled = false;
+                        saveRoutineBtn.textContent = originalText;
+                        return;
+                    }
+
+                    alert('오늘 루틴 기록을 저장했어요 ✅');
+                    saveRoutineBtn.textContent = '오늘 루틴 완료 저장됨';
+                } catch (err) {
+                    console.error('[Training] 루틴 저장 오류:', err);
+                    alert('저장 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.');
+                    saveRoutineBtn.disabled = false;
+                    saveRoutineBtn.textContent = originalText;
+                }
             });
         }
+
+        console.log('[Training] 오늘 루틴 완료 저장 기능 활성화');
 
         // ===== 초기화 =====
         if (swingId) {
