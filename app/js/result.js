@@ -174,8 +174,8 @@
     });
 
     // 서버에서 브로드캐스트되는 이벤트 수신
-    channel.on('event:added', (payload) => {
-      console.log('[Realtime] 💬 event:added 수신:', payload);
+    channel.on('event:new', (payload) => {
+      console.log('[Realtime] 💬 event:new 수신:', payload);
       if (payload.type === 'chat_message') {
         appendMessage(
           payload.author_role || 'coach',
@@ -291,17 +291,26 @@
       meta: { ts: Date.now() }
     };
 
-    console.log('[Realtime] ➡ event:new 전송:', payload);
+    console.log('[Realtime] ➡ event:new 전송:', JSON.stringify(payload));
 
-    channel
-      .push('event:new', payload)
-      .receive('ok', () => {
-        console.log('[Realtime] 메시지 전송 성공');
+    const pushRef = channel.push('event:new', payload);
+    
+    if (!pushRef) {
+      console.error('[Realtime] channel.push() 실패 - pushRef가 null');
+      return;
+    }
+
+    pushRef
+      .receive('ok', (resp) => {
+        console.log('[Realtime] ✅ 메시지 전송 성공:', resp);
         const input = $('realtimeMessageInput');
         if (input) input.value = '';
       })
       .receive('error', (err) => {
-        console.error('[Realtime] 메시지 전송 오류:', err);
+        console.error('[Realtime] ❌ 메시지 전송 오류:', err);
+      })
+      .receive('timeout', () => {
+        console.warn('[Realtime] ⏱ 메시지 전송 타임아웃');
       });
   }
 
