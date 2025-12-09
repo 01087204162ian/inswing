@@ -158,12 +158,19 @@
     });
 
     ch.onError((reason) => {
-      console.error('[Realtime] ⚠ 채널 에러:', reason);
+      // 🔥 빈 객체 또는 null/undefined 에러는 무시 (presence sync 중 자주 발생하는 정상 패턴)
+      if (!reason || (typeof reason === "object" && Object.keys(reason).length === 0)) {
+        console.warn("[Realtime] ⚠ 채널 에러 감지 — 빈 error 객체 → 무시");
+        return;
+      }
+    
+      console.error("[Realtime] ⚠ 채널 에러:", reason);
       isJoining = false;
       isJoined = false;
-      updateConnectionStatus('error');
+      updateConnectionStatus("error");
       enableChatInput(false);
     });
+    
 
     ch.onClose(() => {
       console.log('[Realtime] ℹ 채널 종료됨');
