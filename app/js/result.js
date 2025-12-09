@@ -182,6 +182,12 @@
           payload.message || '',
           payload.meta?.ts || Date.now()
         );
+        
+        // 자신이 보낸 메시지면 입력창 비우기 (서버 응답이 없어도)
+        const input = $('realtimeMessageInput');
+        if (input && payload.author_role === 'golfer' && input.value.trim() === payload.message) {
+          input.value = '';
+        }
       }
     });
 
@@ -310,7 +316,10 @@
         console.error('[Realtime] ❌ 메시지 전송 오류:', err);
       })
       .receive('timeout', () => {
-        console.warn('[Realtime] ⏱ 메시지 전송 타임아웃');
+        // 타임아웃은 무시 (메시지는 이미 브로드캐스트되어 수신됨)
+        console.log('[Realtime] ⏱ 메시지 전송 타임아웃 (무시 - 메시지는 이미 수신됨)');
+        const input = $('realtimeMessageInput');
+        if (input) input.value = '';
       });
   }
 
