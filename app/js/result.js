@@ -1,11 +1,10 @@
 // INSWING 실시간 코칭 WebSocket 연결 및 채팅 기능
-
 (function () {
   'use strict';
 
   let socket = null;
   let channel = null;
-  let channelState = "idle";
+  let channelState = 'idle';
   let sessionId = null;
 
   const $ = (id) => document.getElementById(id);
@@ -15,8 +14,54 @@
     return params.get('id');
   }
 
-  function initRealtime(sessionId) {
-    if (!sessionId) {
+  // ===== UI 상태 처리 =====
+
+  function setConnectionStatus(status) {
+    const statusEl = $('realtimeStatus');
+    if (!statusEl) return;
+
+    let text = '연결 중...';
+
+    switch (status) {
+      case 'joined':
+        text = '연결됨';
+        statusEl.className = 'realtime-status status-joined';
+        break;
+      case 'error':
+        text = '연결 오류';
+        statusEl.className = 'realtime-status status-error';
+        break;
+      case 'disconnected':
+        text = '연결 끊김';
+        statusEl.className = 'realtime-status status-disconnected';
+        break;
+      case 'connecting':
+      default:
+        text = '연결 중...';
+        statusEl.className = 'realtime-status status-connecting';
+        break;
+    }
+
+    statusEl.textContent = text;
+  }
+
+  function setChatEnabled(enabled) {
+    const input = $('realtimeMessageInput');
+    const sendBtn = $('realtimeSendBtn');
+
+    if (input) {
+      input.disabled = !enabled;
+      input.placeholder = enabled ? '메시지를 입력하세요...' : '연결 중...';
+    }
+    if (sendBtn) {
+      sendBtn.disabled = !enabled;
+    }
+  }
+
+  // ===== WebSocket / 채널 연결 =====
+
+  function initRealtime(sessionIdParam) {
+    if (!sessionIdParam) {
       console.warn('[Realtime] sessionId 없음');
       return;
     }
@@ -26,13 +71,19 @@
       return;
     }
 
+    setConnectionStatus('connecting');
+    setChatEnabled(false);
+
+    // 이미 열린 소켓이 있으면 재사용
     if (socket && socket.connectionState() === 'open') {
       if (channel && channelState === 'joined') {
         console.log('[Realtime] 이미 연결되어 있음');
+        setConnectionStatus('joined');
+        setChatEnabled(true);
         return;
       }
       if (!channel || channelState === 'idle' || channelState === 'errored') {
-        joinChannel(sessionId);
+        joinChannel(sessionIdParam);
         return;
       }
       return;
@@ -42,28 +93,32 @@
     console.log('[Realtime] WebSocket 연결 시도:', socketUrl);
 
     socket = new Phoenix.Socket(socketUrl, {
-      reconnectAfterMs: () => 2000,
+      reconnectAfterMs: () => 2000
     });
 
     socket.onOpen(() => {
       console.log('[Realtime] ✅ 소켓 연결 성공');
-      joinChannel(sessionId);
+      joinChannel(sessionIdParam);
     });
 
     socket.onError(() => {
       console.error('[Realtime] ❌ 소켓 오류');
+      setConnectionStatus('error');
+      setChatEnabled(false);
     });
 
     socket.onClose(() => {
       console.log('[Realtime] 🔌 소켓 연결 종료');
       channel = null;
-      channelState = "idle";
+      channelState = 'idle';
+      setConnectionStatus('disconnected');
+      setChatEnabled(false);
     });
 
     socket.connect();
   }
 
-  function joinChannel(sessionId) {
+  function joinChannel(sessionIdParam) {
     if (!socket || socket.connectionState() !== 'open') {
       console.warn('[Realtime] 소켓 미연결');
       return;
@@ -81,15 +136,18 @@
       channel = null;
     }
 
-    channelState = "joining";
+    channelState = 'joining';
+    setConnectionStatus('connecting');
+    setChatEnabled(false);
 
-    const topic = `session:${sessionId}`;
+    const topic = `session:${sessionIdParam}`;
     console.log('[Realtime] 채널 join 시도:', topic);
 
     channel = socket.channel(topic, {
       rejoinAfterMs: () => false
     });
 
+    // 서버에서 브로드캐스트되는 이벤트 수신
     channel.on('event:added', (payload) => {
       console.log('[Realtime] 💬 event:added 수신:', payload);
       if (payload.type === 'chat_message') {
@@ -102,17 +160,21 @@
     });
 
     channel.onError((reason) => {
-      if (!reason || (typeof reason === "object" && Object.keys(reason).length === 0)) {
-        console.warn('[Realtime] ⚠ 빈 error 객체 감지');
+      if (!reason || (typeof reason === 'object' && Object.keys(reason).length === 0)) {
+        console.warn('[Realtime] ⚠ 빈 error 객체 감지 (무시)');
         return;
       }
       console.error('[Realtime] ⚠ 채널 에러:', reason);
-      channelState = "errored";
+      channelState = 'errored';
+      setConnectionStatus('error');
+      setChatEnabled(false);
     });
 
     channel.onClose(() => {
       console.log('[Realtime] ℹ 채널 종료됨');
-      channelState = "idle";
+      channelState = 'idle';
+      setConnectionStatus('disconnected');
+      setChatEnabled(false);
     });
 
     channel
@@ -123,35 +185,44 @@
           return;
         }
 
-        if (channel && channel.state === 'joined') {
-          console.log('[Realtime] 🎯 JOIN OK (기존 메시지:', (resp.messages || []).length, '개)');
-          channelState = "joined";
+        console.log(
+          '[Realtime] 🎯 JOIN OK (기존 메시지:',
+          (resp.messages || []).length,
+          '개)'
+        );
 
-          if (resp.messages && Array.isArray(resp.messages)) {
-            resp.messages.forEach((msg) => {
-              if (msg.type === 'chat_message') {
-                appendMessage(
-                  msg.author_role || 'coach',
-                  msg.message || '',
-                  msg.meta?.ts || Date.now()
-                );
-              }
-            });
-          }
-        } else {
-          console.warn('[Realtime] JOIN OK 수신했지만 채널 상태가 joined 아님');
-          channelState = "idle";
+        channelState = 'joined';
+        setConnectionStatus('joined');
+        setChatEnabled(true);
+
+        // 기존 메시지 렌더링
+        if (resp.messages && Array.isArray(resp.messages)) {
+          resp.messages.forEach((msg) => {
+            if (msg.type === 'chat_message') {
+              appendMessage(
+                msg.author_role || 'coach',
+                msg.message || '',
+                msg.meta?.ts || Date.now()
+              );
+            }
+          });
         }
       })
       .receive('error', (err) => {
         console.error('[Realtime] ❌ JOIN ERROR:', err);
-        channelState = "errored";
+        channelState = 'errored';
+        setConnectionStatus('error');
+        setChatEnabled(false);
       })
       .receive('timeout', () => {
         console.warn('[Realtime] ⏱ JOIN TIMEOUT');
-        channelState = "idle";
+        channelState = 'idle';
+        setConnectionStatus('error');
+        setChatEnabled(false);
       });
   }
+
+  // ===== 메시지 전송 / 렌더링 =====
 
   function sendMessage(msg) {
     if (!channel || channelState !== 'joined') {
@@ -159,9 +230,7 @@
       return;
     }
 
-    if (!msg || !msg.trim()) {
-      return;
-    }
+    if (!msg || !msg.trim()) return;
 
     const payload = {
       type: 'chat_message',
@@ -176,7 +245,7 @@
       .push('event:new', payload)
       .receive('ok', () => {
         console.log('[Realtime] 메시지 전송 성공');
-        const input = $('chat-input');
+        const input = $('realtimeMessageInput');
         if (input) input.value = '';
       })
       .receive('error', (err) => {
@@ -184,39 +253,36 @@
       });
   }
 
-  function appendMessage(author, text, ts) {
-    const list = $('chat-list');
+  function appendMessage(authorRole, text, ts) {
+    const list = $('realtimeMessageList');
     if (!list) return;
 
-    const time = new Date(ts).toLocaleTimeString('ko-KR', {
+    const timeStr = new Date(ts).toLocaleTimeString('ko-KR', {
       hour: '2-digit',
       minute: '2-digit'
     });
 
-    const role = author === 'golfer' ? 'golfer' : author === 'ai' ? 'ai' : 'coach';
-    const profileIcon = role === 'golfer' ? '나' : role === 'ai' ? 'AI' : '코치';
+    const isGolfer = authorRole === 'golfer';
 
-    const el = document.createElement('div');
-    el.className = `chat-message ${role}`;
+    const wrapper = document.createElement('div');
+    wrapper.className = `realtime-message ${isGolfer ? 'message-golfer' : 'message-coach'}`;
 
-    let content = '';
-    if (role === 'ai') {
-      content = `<div class="bubble ai-insight"><span class="insight-badge">💡 Insight</span><div>${text}</div></div>`;
-    } else {
-      content = `<div class="bubble">${text}</div>`;
-    }
+    const textEl = document.createElement('div');
+    textEl.className = 'message-text';
+    textEl.textContent = text;
 
-    el.innerHTML = `
-      <div class="profile-icon">${profileIcon}</div>
-      <div class="content">
-        ${content}
-        <div class="meta">${time}</div>
-      </div>
-    `;
+    const timeEl = document.createElement('div');
+    timeEl.className = 'message-time';
+    timeEl.textContent = timeStr;
 
-    list.appendChild(el);
+    wrapper.appendChild(textEl);
+    wrapper.appendChild(timeEl);
+
+    list.appendChild(wrapper);
     list.scrollTop = list.scrollHeight;
   }
+
+  // ===== 초기화 =====
 
   function init() {
     sessionId = getSwingId();
@@ -225,12 +291,13 @@
       return;
     }
 
-    const sendBtn = $('chat-send');
-    const input = $('chat-input');
+    const input = $('realtimeMessageInput');
+    const sendBtn = $('realtimeSendBtn');
 
     if (sendBtn) {
       sendBtn.addEventListener('click', () => {
-        const msg = input?.value;
+        if (!input) return;
+        const msg = input.value;
         if (msg) sendMessage(msg);
       });
     }
