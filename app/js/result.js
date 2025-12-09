@@ -86,14 +86,28 @@
       return console.warn('[Realtime] 소켓 미연결 상태 → join 보류');
     }
 
+    // 중복 join 방지: 이미 join 중이거나 joined 상태면 즉시 리턴
     if (isJoining) {
       return console.warn('[Realtime] 이미 join 중 → 중복 join 방지');
+    }
+
+    if (isJoined && channel && channel.state === 'joined') {
+      return console.warn('[Realtime] 이미 joined 상태 → 중복 join 방지');
     }
 
     if (channel) {
       const state = channel.state;
       if (state === 'joined' || state === 'joining') {
         return console.warn('[Realtime] 채널 이미', state, '→ 중복 join 방지');
+      }
+      
+      // errored 상태인 경우에만 재시도
+      if (state === 'errored') {
+        console.log('[Realtime] 채널 errored 상태 → 재연결 시도');
+        // 이전 채널 정리 후 재시도
+      } else if (state !== 'closed' && state !== 'leaving') {
+        // 다른 상태면 대기
+        return console.warn('[Realtime] 채널 상태:', state, '→ join 보류');
       }
     }
 
@@ -110,8 +124,7 @@
       channel = null;
     }
 
-    isJoining = true;
-    isJoined = false;
+    isJoined = false; // join 시작 전에 초기화
 
     const topic = `session:${swingId}`;
     console.log('[Realtime] 채널 join 시도:', topic);
@@ -122,30 +135,47 @@
 
     setupChannelListeners(channel);
 
+    // join 요청 전에 한 번 더 체크
+    if (isJoining || (channel && channel.state === 'joined')) {
+      return console.warn('[Realtime] join 직전 중복 체크 실패');
+    }
+
+    isJoining = true; // join 시작 전에 플래그 설정
+
+    // join 요청 전에 한 번 더 체크
+    if (isJoining || (channel && channel.state === 'joined')) {
+      return console.warn('[Realtime] join 직전 중복 체크 실패');
+    }
+
+    isJoining = true; // join 시작 전에 플래그 설정
+
     channel
       .join()
       .receive('ok', (resp) => {
         // 중복 실행 방지: 이미 joined 상태면 무시
-        if (isJoined && channel.state === 'joined') {
-          console.warn('[Realtime] JOIN OK 중복 수신 무시');
+        if (isJoined && channel && channel.state === 'joined') {
+          console.warn('[Realtime] JOIN OK 중복 수신 무시 (이미 joined)');
+          isJoining = false;
           return;
         }
 
-        if (channel.state === 'joined') {
-          console.log('[Realtime] ✅ JOIN OK:', resp);
-          isJoining = false;
-          isJoined = true;
-          updateConnectionStatus('joined');
-          enableChatInput(true);
-
-          if (resp.messages?.length) {
-            console.log('[Realtime] 기존 메시지 로드:', resp.messages.length);
-            resp.messages.forEach(handleIncomingMessage);
-          }
-        } else {
-          console.warn('[Realtime] JOIN OK 수신하였지만 실제 채널 상태:', channel.state);
+        // 채널이 없거나 상태가 joined가 아니면 무시
+        if (!channel || channel.state !== 'joined') {
+          console.warn('[Realtime] JOIN OK 수신하였지만 채널 상태가 joined 아님:', channel?.state);
           isJoining = false;
           isJoined = false;
+          return;
+        }
+
+        console.log('[Realtime] ✅ JOIN OK:', resp);
+        isJoining = false;
+        isJoined = true;
+        updateConnectionStatus('joined');
+        enableChatInput(true);
+
+        if (resp.messages?.length) {
+          console.log('[Realtime] 기존 메시지 로드:', resp.messages.length);
+          resp.messages.forEach(handleIncomingMessage);
         }
       })
       .receive('error', (err) => {
