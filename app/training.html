@@ -245,6 +245,37 @@
             cursor: not-allowed;
         }
 
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #f87171;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            margin-top: 1rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
         /* 모바일 대응 */
         @media (max-width: 768px) {
             .top-nav {
@@ -310,19 +341,11 @@
                 방금 분석한 스윙을 기준으로, 오늘 연습장에서 꼭 챙기면 좋은 포인트입니다.
             </p>
 
-            <ol class="training-focus-list">
-                <li>
-                    <h3>1. 피니시 균형 유지</h3>
-                    <p>임팩트 후 왼발 위에 머리를 세우는 느낌으로 3초간 피니시를 유지합니다.</p>
-                </li>
-                <li>
-                    <h3>2. 템포 3:1 리듬 만들기</h3>
-                    <p>백스윙 3박, 다운스윙 1박의 일정한 리듬을 의식하면서 스윙합니다.</p>
-                </li>
-                <li>
-                    <h3>3. 상체 고정 & 체중 이동</h3>
-                    <p>머리는 고정하고, 오른발에서 왼발로 체중이 자연스럽게 넘어가는 느낌을 찾습니다.</p>
-                </li>
+            <div id="trainingLoading" class="loading-dots" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                트레이닝 데이터를 불러오는 중...
+            </div>
+            <ol id="trainingFocusList" class="training-focus-list" style="display: none;">
+                <!-- 동적으로 채워질 포인트 목록 -->
             </ol>
         </div>
 
@@ -333,28 +356,14 @@
                 연습이 끝난 후 아래 항목들을 체크해 보세요. 루틴 달성이 쌓이면 실력이 안정됩니다.
             </p>
 
-            <ul class="training-routine-list">
-                <li>
-                    <label>
-                        <input type="checkbox" />
-                        드라이버 피니시 3초 유지 20회
-                    </label>
-                </li>
-                <li>
-                    <label>
-                        <input type="checkbox" />
-                        7번 아이언 템포 3:1 스윙 30회
-                    </label>
-                </li>
-                <li>
-                    <label>
-                        <input type="checkbox" />
-                        웜업 스트레칭 10분 + 셋업 루틴 10회
-                    </label>
-                </li>
+            <div id="routineLoading" class="loading-dots" style="text-align: center; padding: 1rem; color: #94a3b8; display: none;">
+                루틴을 불러오는 중...
+            </div>
+            <ul id="trainingRoutineList" class="training-routine-list" style="display: none;">
+                <!-- 동적으로 채워질 루틴 목록 -->
             </ul>
 
-            <button class="btn-primary training-save-btn" disabled>
+            <button id="saveRoutineBtn" class="btn-primary training-save-btn" disabled>
                 (향후) 오늘 루틴 완료로 저장
             </button>
         </div>
@@ -362,9 +371,11 @@
         <!-- ③ 코칭 요약 & 메모 카드 -->
         <div class="card training-card">
             <h2 class="section-title">오늘 코칭 한 줄 요약</h2>
-            <p class="training-summary">
-                피니시에서 상체가 먼저 풀리는 경향이 있으니, 왼발 위에 머리를 세운다는 느낌으로
-                균형을 잡아보세요. 오늘은 '균형 잡힌 피니시' 하나만 기억해도 좋습니다.
+            <div id="summaryLoading" class="loading-dots" style="text-align: center; padding: 1rem; color: #94a3b8;">
+                코칭 요약을 불러오는 중...
+            </div>
+            <p id="trainingSummary" class="training-summary" style="display: none;">
+                <!-- 동적으로 채워질 코칭 요약 -->
             </p>
 
             <label for="trainingMemo" class="training-memo-label">
@@ -391,9 +402,148 @@
 
         const swingId = getQueryParam('id');
         console.log('[Training] swingId:', swingId);
-        // 나중에 swingId로 /v1/swings/{id} 불러와서 training 포인트/루틴을 채울 예정
 
-        // (향후) training.js로 분리 예정
+        // swingId가 없으면 히스토리로 리다이렉트
+        if (!swingId) {
+            console.warn('[Training] swingId 없음 → 히스토리로 리다이렉트');
+            window.location.href = '/app/history.html';
+        }
+
+        // ===== DOM 요소 참조 =====
+        const focusListEl = document.getElementById('trainingFocusList');
+        const focusLoadingEl = document.getElementById('trainingLoading');
+        const routineListEl = document.getElementById('trainingRoutineList');
+        const routineLoadingEl = document.getElementById('routineLoading');
+        const summaryEl = document.getElementById('trainingSummary');
+        const summaryLoadingEl = document.getElementById('summaryLoading');
+        const saveRoutineBtn = document.getElementById('saveRoutineBtn');
+
+        // ===== API 호출 =====
+        async function loadTrainingData(swingId) {
+            try {
+                console.log('[Training] 트레이닝 데이터 로드 시작, swingId:', swingId);
+
+                const response = await apiFetch(`/v1/swings/${swingId}/training`);
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showError('이 스윙은 아직 트레이닝 데이터가 없습니다.');
+                        return;
+                    }
+                    throw new Error(`서버 오류 (${response.status})`);
+                }
+
+                const data = await response.json();
+                console.log('[Training] 트레이닝 데이터 수신:', data);
+
+                // UI에 데이터 바인딩
+                renderFocusPoints(data.focus || []);
+                renderRoutineItems(data.routine_items || []);
+                renderSummary(data.coach_summary || '');
+
+            } catch (error) {
+                console.error('[Training] 데이터 로드 오류:', error);
+                showError('트레이닝 데이터를 불러오는 중 오류가 발생했습니다.', true);
+            }
+        }
+
+        // ===== UI 렌더링 =====
+        function renderFocusPoints(focusArray) {
+            if (!focusListEl || !focusLoadingEl) return;
+
+            focusLoadingEl.style.display = 'none';
+
+            if (!focusArray || focusArray.length === 0) {
+                focusListEl.innerHTML = '<li style="color: #94a3b8; font-style: italic;">포인트 데이터가 없습니다.</li>';
+                focusListEl.style.display = 'block';
+                return;
+            }
+
+            focusListEl.innerHTML = focusArray.map((item, index) => {
+                // item이 문자열이면 그대로, 객체면 title/description 추출
+                const title = typeof item === 'string' ? item : (item.title || item.name || `포인트 ${index + 1}`);
+                const description = typeof item === 'string' ? '' : (item.description || item.desc || '');
+
+                return `
+                    <li>
+                        <h3>${index + 1}. ${title}</h3>
+                        ${description ? `<p>${description}</p>` : ''}
+                    </li>
+                `;
+            }).join('');
+
+            focusListEl.style.display = 'block';
+        }
+
+        function renderRoutineItems(routineArray) {
+            if (!routineListEl || !routineLoadingEl) return;
+
+            routineLoadingEl.style.display = 'none';
+
+            if (!routineArray || routineArray.length === 0) {
+                routineListEl.innerHTML = '<li style="color: #94a3b8; font-style: italic;">루틴 데이터가 없습니다.</li>';
+                routineListEl.style.display = 'block';
+                return;
+            }
+
+            routineListEl.innerHTML = routineArray.map((item, index) => {
+                const text = typeof item === 'string' ? item : (item.text || item.name || `루틴 ${index + 1}`);
+                return `
+                    <li>
+                        <label>
+                            <input type="checkbox" data-routine-index="${index}" />
+                            ${text}
+                        </label>
+                    </li>
+                `;
+            }).join('');
+
+            routineListEl.style.display = 'block';
+        }
+
+        function renderSummary(summaryText) {
+            if (!summaryEl || !summaryLoadingEl) return;
+
+            summaryLoadingEl.style.display = 'none';
+
+            if (!summaryText || summaryText.trim() === '') {
+                summaryEl.textContent = '코칭 요약이 없습니다.';
+                summaryEl.style.display = 'block';
+                return;
+            }
+
+            summaryEl.textContent = summaryText;
+            summaryEl.style.display = 'block';
+        }
+
+        // ===== 에러 처리 =====
+        function showError(message, showRetry = false) {
+            // 포인트 영역에 에러 표시
+            if (focusLoadingEl) {
+                focusLoadingEl.innerHTML = `<div class="error-message">${message}${showRetry ? '<br><button class="retry-btn" onclick="location.reload()">다시 시도</button>' : ''}</div>`;
+            }
+
+            // 루틴 영역 숨김
+            if (routineLoadingEl) routineLoadingEl.style.display = 'none';
+            if (routineListEl) routineListEl.style.display = 'none';
+
+            // 요약 영역 숨김
+            if (summaryLoadingEl) summaryLoadingEl.style.display = 'none';
+            if (summaryEl) summaryEl.style.display = 'none';
+        }
+
+        // ===== 루틴 저장 버튼 이벤트 =====
+        if (saveRoutineBtn) {
+            saveRoutineBtn.addEventListener('click', () => {
+                console.log('[Training] 루틴 저장 - 나중에 API 연동 예정');
+                // 향후: 체크된 루틴 항목들을 수집하여 API로 전송
+            });
+        }
+
+        // ===== 초기화 =====
+        if (swingId) {
+            loadTrainingData(swingId);
+        }
     </script>
 </body>
 </html>
