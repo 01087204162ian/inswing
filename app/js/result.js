@@ -8,6 +8,7 @@
     let isJoining = false;
     let messageRef = 0;
     let initialized = false; // 🔥 중복 init 방지
+    let realtimeInitialized = false; // 🔥 중복 realtime 초기화 방지
   
     const $ = (id) => document.getElementById(id);
   
@@ -20,6 +21,13 @@
     // WebSocket + 채널 초기화
     // =========================
     function initRealtimeCoaching() {
+      // 이미 초기화되었고 정상 작동 중이면 중복 호출 방지
+      if (realtimeInitialized && socket && socket.connectionState() === 'open' && 
+          channel && (channel.state === 'joined' || channel.state === 'joining')) {
+        console.warn('[Realtime] 이미 초기화되어 정상 작동 중입니다. 중복 호출 방지.');
+        return;
+      }
+
       const swingId = getSwingId();
       if (!swingId) {
         console.warn('[Realtime] swingId가 없어 실시간 코칭을 시작할 수 없습니다.');
@@ -31,11 +39,21 @@
         return;
       }
 
-      // 이미 초기화 중이거나 join 중이면 중복 호출 방지
-      if (isJoining || (channel && (channel.state === 'joining' || channel.state === 'joined'))) {
-        console.warn('[Realtime] 이미 초기화 중이거나 join 중입니다. 중복 호출 방지.');
+      // 이미 join 중이면 중복 호출 방지
+      if (isJoining) {
+        console.warn('[Realtime] 이미 join 중입니다. 중복 호출 방지.');
         return;
       }
+
+      if (channel) {
+        const state = channel.state;
+        if (state === 'joined' || state === 'joining') {
+          console.warn('[Realtime] 채널이 이미', state, '상태입니다. 중복 호출 방지.');
+          return;
+        }
+      }
+
+      realtimeInitialized = true;
   
       // 이미 연결되어 있으면 재사용
       if (socket && socket.connectionState() === 'open') {
@@ -71,7 +89,9 @@
       socket.onClose(() => {
         console.log('[Realtime] 🔌 소켓 연결 종료');
         isJoined = false;
+        isJoining = false;
         channel = null;
+        realtimeInitialized = false; // 재연결 가능하도록 플래그 초기화
         updateConnectionStatus('disconnected');
         enableChatInput(false);
       });
@@ -94,9 +114,22 @@
         return;
       }
 
-      if (channel && channel.state === 'joined') {
-        console.warn('[Realtime] 이미 joined 상태입니다. 중복 join 방지.');
-        return;
+      if (channel) {
+        const state = channel.state;
+        if (state === 'joined' || state === 'joining') {
+          console.warn('[Realtime] 이미', state, '상태입니다. 중복 join 방지.');
+          return;
+        }
+        
+        // errored 상태인 경우에만 재시도
+        if (state === 'errored') {
+          console.log('[Realtime] 채널이 errored 상태입니다. 재연결 시도.');
+          // 이전 채널 정리 후 재시도
+        } else {
+          // 다른 상태(leaving 등)면 대기
+          console.warn('[Realtime] 채널 상태:', state, '- join 대기');
+          return;
+        }
       }
   
       // 이전 채널 정리 (중복 메시지 방지의 핵심)
@@ -201,7 +234,19 @@
 
       // 채널 에러 상태 감지
       ch.onError((reason) => {
+        // 빈 객체나 의미 없는 에러는 무시
+        if (!reason || (typeof reason === 'object' && Object.keys(reason).length === 0)) {
+          return;
+        }
+        
         console.error('[Realtime] ⚠️ 채널 에러:', reason);
+        
+        // 이미 에러 상태로 처리 중이면 중복 처리 방지
+        if (!isJoined && !isJoining) {
+          return;
+        }
+        
+        isJoining = false;
         isJoined = false;
         enableChatInput(false);
         updateConnectionStatus('error');
@@ -532,8 +577,9 @@
       window.addEventListener('resize', setupMobilePanelToggle);
     }
   
-    window.initRealtimeCoaching = initRealtimeCoaching;
+    //window.initRealtimeCoaching = initRealtimeCoaching;
   
     init();
   })();
+  
   
