@@ -54,7 +54,10 @@
     socket.onOpen(() => {
       console.log('[Realtime] ✅ 소켓 연결 성공');
       updateConnectionStatus('connected');
-      joinChannel(swingId);
+      // 약간의 딜레이를 주어 소켓이 완전히 준비되도록 함
+      setTimeout(() => {
+        joinChannel(swingId);
+      }, 100);
     });
 
     socket.onError(() => {
@@ -122,6 +125,12 @@
     channel
       .join()
       .receive('ok', (resp) => {
+        // 중복 실행 방지: 이미 joined 상태면 무시
+        if (isJoined && channel.state === 'joined') {
+          console.warn('[Realtime] JOIN OK 중복 수신 무시');
+          return;
+        }
+
         if (channel.state === 'joined') {
           console.log('[Realtime] ✅ JOIN OK:', resp);
           isJoining = false;
@@ -135,6 +144,8 @@
           }
         } else {
           console.warn('[Realtime] JOIN OK 수신하였지만 실제 채널 상태:', channel.state);
+          isJoining = false;
+          isJoined = false;
         }
       })
       .receive('error', (err) => {
@@ -248,8 +259,18 @@
   // ──────────────────────────────────────────────────────────
   function sendMessage() {
     const swingId = getSwingId();
-    if (!swingId || !channel || !isJoined || channel.state !== 'joined')
-      return console.warn('[Realtime] 아직 메시지를 전송할 수 없음');
+    if (!swingId) {
+      return console.warn('[Realtime] swingId 없음');
+    }
+    if (!channel) {
+      return console.warn('[Realtime] 채널 객체 없음');
+    }
+    if (!isJoined) {
+      return console.warn('[Realtime] isJoined = false');
+    }
+    if (channel.state !== 'joined') {
+      return console.warn('[Realtime] 채널 상태:', channel.state, '(joined 아님)');
+    }
 
     const input = $('realtimeMessageInput');
     const msg = input?.value.trim();
