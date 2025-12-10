@@ -424,24 +424,26 @@
       let answer = '';
       
       if (data.answer && typeof data.answer === 'object') {
-        // 구조화된 답변 (cause_text, solution_text 등)
-        const parts = [];
-        if (data.answer.cause_text) {
-          parts.push(`🔍 원인: ${data.answer.cause_text}`);
+        const ans = data.answer;
+        // 우선순위: text가 있으면 그대로 사용
+        if (ans.text) {
+          answer = ans.text;
+        } else {
+          const parts = [];
+          const cause = ans.cause || ans.cause_text;
+          const solution = ans.solution || ans.solution_text;
+          const feel = ans.feel || ans.feel_image;
+          const drill = ans.drill || ans.drill_text;
+          const encouragement = ans.encouragement;
+
+          if (cause) parts.push(`🔍 원인: ${cause}`);
+          if (solution) parts.push(`💡 해결책: ${solution}`);
+          if (feel) parts.push(`🎯 느낌: ${feel}`);
+          if (drill) parts.push(`🏌️ 연습법: ${drill}`);
+          if (encouragement) parts.push(`✨ 격려: ${encouragement}`);
+
+          answer = parts.join('\n\n');
         }
-        if (data.answer.solution_text) {
-          parts.push(`💡 해결책: ${data.answer.solution_text}`);
-        }
-        if (data.answer.feel_image) {
-          parts.push(`🎯 느낌: ${data.answer.feel_image}`);
-        }
-        if (data.answer.drill_text) {
-          parts.push(`🏌️ 연습법: ${data.answer.drill_text}`);
-        }
-        if (data.answer.encouragement) {
-          parts.push(`✨ 격려: ${data.answer.encouragement}`);
-        }
-        answer = parts.join('\n\n');
       } else if (data.answer && typeof data.answer === 'string') {
         // 문자열 답변
         answer = data.answer;
