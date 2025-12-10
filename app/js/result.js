@@ -13,6 +13,31 @@
   let questionStatus = null;
   let questionAnswerBox = null;
 
+  function setQuestionStatus(message, type = 'normal') {
+    const statusEl = document.getElementById('coachingQuestionStatus');
+    if (!statusEl) return;
+
+    statusEl.textContent = message || '';
+    statusEl.classList.remove('success', 'error', 'loading');
+
+    if (type === 'success') statusEl.classList.add('success');
+    if (type === 'error') statusEl.classList.add('error');
+    if (type === 'loading') statusEl.classList.add('loading');
+  }
+
+  function setQuestionButtonState(isLoading) {
+    const btn = document.getElementById('coachingQuestionBtn');
+    if (!btn) return;
+
+    if (isLoading) {
+      btn.disabled = true;
+      btn.textContent = '코칭 답변을 준비하는 중...';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '이 스윙에 대해 질문하기';
+    }
+  }
+
   const $ = (id) => document.getElementById(id);
 
   function getSwingId() {
@@ -370,19 +395,19 @@
     const question = raw.trim();
 
     if (!question) {
-      questionStatus.textContent = '먼저 질문 내용을 입력해 주세요.';
+      setQuestionStatus('궁금한 점을 한 문장만이라도 적어주세요.', 'error');
       return;
     }
 
     if (!sessionId) {
       console.warn('[Realtime] sessionId 없음 – 질문 전송 불가');
-      questionStatus.textContent = '스윙 정보가 없습니다. 다시 접속해 주세요.';
+      setQuestionStatus('스윙 정보가 없습니다. 다시 접속해 주세요.', 'error');
       return;
     }
 
-    questionBtn.disabled = true;
+    setQuestionButtonState(true);
     questionInput.readOnly = true;
-    questionStatus.textContent = '답변 생성 중입니다...';
+    setQuestionStatus('이 스윙을 다시 살펴보고 코칭 답변을 정리하고 있습니다.', 'loading');
     questionAnswerBox.textContent = '';
     questionAnswerBox.style.opacity = '0.7';
 
@@ -399,9 +424,9 @@
 
       if (!resp.ok) {
         console.error('[Question] 응답 오류:', resp.status, resp.statusText);
-        
+
         let errorMessage = '답변 생성에 실패했습니다.';
-        
+
         if (resp.status === 404) {
           errorMessage = '질문 기능이 아직 준비되지 않았습니다. 곧 업데이트될 예정입니다.';
           console.warn('[Question] API 엔드포인트가 존재하지 않습니다. 백엔드에 /swings/{id}/questions 엔드포인트를 추가해야 합니다.');
@@ -410,9 +435,9 @@
         } else if (resp.status === 500) {
           errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
         }
-        
-        questionStatus.textContent = errorMessage;
-        questionBtn.disabled = false;
+
+        setQuestionStatus(errorMessage, 'error');
+        setQuestionButtonState(false);
         questionInput.readOnly = false;
         return;
       }
@@ -457,15 +482,19 @@
 
       questionAnswerBox.textContent = answer;
       questionAnswerBox.style.opacity = '1';
-      questionStatus.textContent = '코칭 답변이 생성되었습니다.';
+      setQuestionStatus('이번 스윙에 대한 코칭 답변이 준비되었습니다.', 'success');
+      setQuestionButtonState(false);
 
       // (옵션) 실시간 코칭 패널에도 코치 메시지로 추가
       appendMessage('coach', answer, Date.now());
     } catch (e) {
       console.error('[Question] 예외 발생:', e);
-      questionStatus.textContent = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
+      setQuestionStatus(
+        '지금은 코칭 답변을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        'error'
+      );
+      setQuestionButtonState(false);
     } finally {
-      questionBtn.disabled = false;
       questionInput.readOnly = false;
     }
   }
@@ -516,6 +545,9 @@
       buttonDisabled: questionBtn?.disabled,
       inputReadOnly: questionInput?.readOnly
     });
+
+    // 초기 상태 문구
+    setQuestionStatus('코칭 답변이 생성되면 이곳에 표시됩니다.', 'normal');
   }
 
   // ===== 모바일 패널 토글 =====
@@ -623,4 +655,5 @@
   }
 
   init();
+  console.log('[Question] 하이 클래스 코칭 톤/UX 적용 완료');
 })();

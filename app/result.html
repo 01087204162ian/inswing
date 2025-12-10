@@ -126,6 +126,24 @@
             font-size: 0.95rem;
         }
 
+        .question-status-text {
+            margin-top: 0.4rem;
+            font-size: 0.78rem;
+            color: #9ca3af;
+        }
+
+        .question-status-text.success {
+            color: #4ade80;
+        }
+
+        .question-status-text.error {
+            color: #f97373;
+        }
+
+        .question-status-text.loading {
+            color: #93c5fd;
+        }
+
         /* 상단 메타 배지 */
         .meta-row {
             margin-top: 1rem;
@@ -926,13 +944,15 @@
                             id="coachingQuestionInput"
                             class="coaching-question-input"
                             rows="2"
-                            placeholder="예: 피니시에서 자꾸 왼쪽으로 넘어가요. 어떻게 잡아야 할까요?"
+                            placeholder="이 스윙에서 가장 궁금한 점을 적어주세요. 예: 피니시에서 균형이 무너지는 이유가 뭘까요?"
                         ></textarea>
                         <div class="coaching-question-actions">
                             <button id="coachingQuestionBtn" class="btn-feeling-save">
                                 이 스윙에 대해 질문하기
                             </button>
-                            <span id="coachingQuestionStatus" class="feeling-status-text"></span>
+                            <p id="coachingQuestionStatus" class="question-status-text">
+                                코칭 답변이 생성되면 이곳에 표시됩니다.
+                            </p>
                         </div>
                         <div id="coachingAnswerBox" class="coaching-answer-box" style="margin-top: 0.8rem;"></div>
                     </div>
