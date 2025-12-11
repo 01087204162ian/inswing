@@ -45,6 +45,37 @@
     return params.get('id');
   }
 
+  async function loadSwingSummary(swingId) {
+    const summaryCard = document.getElementById('swingSummaryCard');
+    const summaryTextEl = document.getElementById('swingSummaryText');
+
+    if (!swingId || !summaryCard || !summaryTextEl) return;
+
+    try {
+      const resp = await apiFetch(`/v1/swings/${swingId}`);
+      if (!resp.ok) {
+        console.warn('[Result] 스윙 요약 조회 실패:', resp.status, resp.statusText);
+        summaryCard.style.display = 'none';
+        return;
+      }
+
+      const data = await resp.json();
+      const summary = data.summary;
+
+      if (summary) {
+        summaryTextEl.textContent = summary;
+        summaryCard.style.display = 'block';
+        console.log('[Result] 스윙 요약 카드(summary) 적용 완료');
+      } else {
+        summaryCard.style.display = 'none';
+      }
+    } catch (err) {
+      console.error('[Result] 스윙 요약 조회 오류:', err);
+      const summaryCard = document.getElementById('swingSummaryCard');
+      if (summaryCard) summaryCard.style.display = 'none';
+    }
+  }
+
   // ===== UI 상태 처리 =====
 
   function setConnectionStatus(status) {
@@ -597,6 +628,7 @@
     }
 
     console.log('[Realtime] 초기화 시작, sessionId:', sessionId);
+    loadSwingSummary(sessionId);
 
     const input = $('realtimeMessageInput');
     const sendBtn = $('realtimeSendBtn');

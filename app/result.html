@@ -126,6 +126,28 @@
             font-size: 0.95rem;
         }
 
+        .summary-card {
+            margin-top: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+
+        .summary-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 0.35rem;
+        }
+
+        .summary-text {
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            line-height: 1.5;
+        }
+
         .question-status-text {
             margin-top: 0.4rem;
             font-size: 0.78rem;
@@ -897,6 +919,12 @@
         <div class="header">
             <h1>스윙 분석 결과</h1>
             <p class="subtitle" id="swingDate">분석 일시를 불러오는 중...</p>
+                <div class="summary-card" id="swingSummaryCard" style="display:none;">
+                    <div class="summary-title">오늘 스윙 한 줄 코칭</div>
+                    <p class="summary-text" id="swingSummaryText">
+                        오늘 스윙에 대한 코치 요약을 불러오는 중입니다.
+                    </p>
+                </div>
             <div class="meta-row">
                 <span class="meta-badge club" id="metaClub">클럽</span>
                 <span class="meta-badge side" id="metaSide">방향</span>
