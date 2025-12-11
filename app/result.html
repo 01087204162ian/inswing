@@ -126,6 +126,14 @@
             font-size: 0.95rem;
         }
 
+        .btn-link-forward {
+            display: inline-block;
+            color: #7db3ff;
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
         .summary-card {
             margin-top: 0.75rem;
             margin-bottom: 1.25rem;
@@ -919,6 +927,7 @@
         <div class="header">
             <h1>스윙 분석 결과</h1>
             <p class="subtitle" id="swingDate">분석 일시를 불러오는 중...</p>
+                <a id="goToTrainingLink" class="btn-link-forward" href="#" style="display:none;">트레이닝으로 이동 →</a>
                 <div class="summary-card" id="swingSummaryCard" style="display:none;">
                     <div class="summary-title">오늘 스윙 한 줄 코칭</div>
                     <p class="summary-text" id="swingSummaryText">

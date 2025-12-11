@@ -48,6 +48,7 @@
   async function loadSwingSummary(swingId) {
     const summaryCard = document.getElementById('swingSummaryCard');
     const summaryTextEl = document.getElementById('swingSummaryText');
+    const goToTrainingLink = document.getElementById('goToTrainingLink');
 
     if (!swingId || !summaryCard || !summaryTextEl) return;
 
@@ -61,6 +62,11 @@
 
       const data = await resp.json();
       const summary = data.summary;
+
+      if (goToTrainingLink) {
+        goToTrainingLink.href = `/app/training.html?id=${encodeURIComponent(swingId)}`;
+        goToTrainingLink.style.display = 'inline-block';
+      }
 
       if (summary) {
         summaryTextEl.textContent = summary;
